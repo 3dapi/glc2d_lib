@@ -1,8 +1,16 @@
 ﻿// link the 2d game library
 #if defined(_DEBUG)
-  #pragma comment(lib, "glc2d_.lib")
+  #if defined(_M_X64) // 64-bit 아키텍처
+    #pragma comment(lib, "glc2d_x64_debug.lib")
+  #elif defined(_M_IX86) // 32-bit 아키텍처
+    #pragma comment(lib, "glc2d_win32_debug.lib")
+  #endif
 #else
-  #pragma comment(lib, "glc2d.lib")
+  #if defined(_M_X64)
+    #pragma comment(lib, "glc2d_x64_release.lib")
+  #elif defined(_M_IX86)
+    #pragma comment(lib, "glc2d_win32_release.lib")
+  #endif
 #endif
 
 // include the 2d game header file
@@ -25,7 +33,7 @@ int		mouseX;
 int		mouseY;
 int		mouseZ;
 
-unsigned char*	pKey;
+const KEYCODE* pKey;
 
 
 int		nSound1;
@@ -34,32 +42,23 @@ int		nSound2;
 
 int main()
 {
+	glc2d_InitSdk();
 	glc2d_SetClearColor(0xFF006699);
-	glc2d_SetWindowStyle(WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU| WS_VISIBLE);
-
-	glc2d_CreateWin(100, 100, 800, 600, "Sound");
 	glc2d_SetRender(Render);
 	glc2d_SetFrameMove(FrameMove);
 
-	glc2d_SetStateShow(false);// State 보여주는 것을 감춘다.
-
+	glc2d_CreateWin(100, 100, 800, 600, "Sound");
 	nTx1	= glc2d_TextureLoad("Texture/lena.png");
 	iImgW1	= glc2d_TextureWidth(nTx1);
 	iImgH1	= glc2d_TextureHeight(nTx1);
 
 	nFont1 = glc2d_FontCreate("Arial", 30, 0);
-
 	nSound1 = glc2d_SoundLoad("sound/bounce.wav");
 	nSound2 = glc2d_SoundLoad("sound/move3.wav");
 
-
-
-
 	glc2d_Run();
 
-
 	glc2d_DestroyWin();
-
 
 	return 0;
 }
@@ -71,7 +70,7 @@ int FrameMove()
 	mouseY = glc2d_GetMouseY();
 	mouseZ = glc2d_GetMouseZ();
 
-	pKey = (unsigned char*)glc2d_GetKeyboard();
+	pKey = glc2d_GetKeyboard();
 
 
 	if(pKey[VK_LEFT] && !glc2d_SoundIsPlaying(nSound1))

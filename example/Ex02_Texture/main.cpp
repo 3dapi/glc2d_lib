@@ -1,8 +1,16 @@
 ﻿// link the 2d game library
 #if defined(_DEBUG)
-  #pragma comment(lib, "glc2d_.lib")
+  #if defined(_M_X64) // 64-bit 아키텍처
+    #pragma comment(lib, "glc2d_x64_debug.lib")
+  #elif defined(_M_IX86) // 32-bit 아키텍처
+    #pragma comment(lib, "glc2d_win32_debug.lib")
+  #endif
 #else
-  #pragma comment(lib, "glc2d.lib")
+  #if defined(_M_X64)
+    #pragma comment(lib, "glc2d_x64_release.lib")
+  #elif defined(_M_IX86)
+    #pragma comment(lib, "glc2d_win32_release.lib")
+  #endif
 #endif
 
 // include the 2d game header file
@@ -24,7 +32,6 @@ int Render()
 {
 	// test....
 	Sleep(40);
-
 
 
 	FLOAT fAngle = acosf(g_vcVcl.x);
@@ -53,19 +60,21 @@ int Render()
 
 int main()
 {
+	glc2d_InitSdk();
 	printf("그림 올리기.......................\n\n");
 
 	//배경색을 바꾼다.
 	glc2d_SetClearColor(0xFF336699);
+
+	// 화면에 출력하기 위해서 함수를 연결한다.
+	glc2d_SetRender(Render);
+
+	// window 생성.
 	glc2d_CreateWin(100, 100, 800, 600, "My First Game Window");
 
 
 	// 그림을 프로그램에 로딩
 	nTx = glc2d_TextureLoad("Texture/tst.png");
-
-
-	// 화면에 출력하기 위해서 함수를 연결한다.
-	glc2d_SetRender(Render);
 
 
 	// 실행
@@ -77,7 +86,6 @@ int main()
 
 	// 윈도우 해제
 	glc2d_DestroyWin();
-
 
 	return 0;
 }

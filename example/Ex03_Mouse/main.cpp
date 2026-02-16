@@ -1,8 +1,16 @@
 ﻿// link the 2d game library
 #if defined(_DEBUG)
-  #pragma comment(lib, "glc2d_.lib")
+  #if defined(_M_X64) // 64-bit 아키텍처
+    #pragma comment(lib, "glc2d_x64_debug.lib")
+  #elif defined(_M_IX86) // 32-bit 아키텍처
+    #pragma comment(lib, "glc2d_win32_debug.lib")
+  #endif
 #else
-  #pragma comment(lib, "glc2d.lib")
+  #if defined(_M_X64)
+    #pragma comment(lib, "glc2d_x64_release.lib")
+  #elif defined(_M_IX86)
+    #pragma comment(lib, "glc2d_win32_release.lib")
+  #endif
 #endif
 
 // include the 2d game header file
@@ -43,12 +51,7 @@ int FrameMove()
 
 int main()
 {
-	// 윈도우 생성
-	glc2d_CreateWin(100, 100, 800, 600, "My First Game Window");
-
-
-	// 텍스처 로드
-	nTx = glc2d_TextureLoad("Texture/lena.png");
+	glc2d_InitSdk();
 
 	// 화면에 출력하기 위해서 출력 함수를 연결한다.
 	glc2d_SetRender(Render);
@@ -56,12 +59,17 @@ int main()
 	// 데이터 갱신을 위한 함수를 연결한다.
 	glc2d_SetFrameMove(FrameMove);
 
+	// 윈도우 생성
+	glc2d_CreateWin(100, 100, 800, 600, "My First Game Window");
+
+	// 텍스처 로드
+	nTx = glc2d_TextureLoad("Texture/lena.png");
+
 	// 실행
 	glc2d_Run();
 
 	// 윈도우 해제
 	glc2d_DestroyWin();
-
 
 	return 0;
 }

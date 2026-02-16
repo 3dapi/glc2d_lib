@@ -1,8 +1,16 @@
 ﻿// link the 2d game library
 #if defined(_DEBUG)
-  #pragma comment(lib, "glc2d_.lib")
+  #if defined(_M_X64) // 64-bit 아키텍처
+    #pragma comment(lib, "glc2d_x64_debug.lib")
+  #elif defined(_M_IX86) // 32-bit 아키텍처
+    #pragma comment(lib, "glc2d_win32_debug.lib")
+  #endif
 #else
-  #pragma comment(lib, "glc2d.lib")
+  #if defined(_M_X64)
+    #pragma comment(lib, "glc2d_x64_release.lib")
+  #elif defined(_M_IX86)
+    #pragma comment(lib, "glc2d_win32_release.lib")
+  #endif
 #endif
 
 // include the 2d game header file
@@ -11,6 +19,9 @@
 
 int main()
 {
+	// SDK 초기화
+	glc2d_InitSdk();
+	
 	printf("Starting ...\n\n");
 
 	// 윈도우 생성
