@@ -10,11 +10,9 @@
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "dsound.lib")
 
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
-#include <windows.h>
+#include <chrono>
 #include <string>
+#include <windows.h>
 
 #include "glcInternal.h"
 #include "ILcInput.h"
@@ -26,18 +24,24 @@
 
 #include "DsUtil.h"
 #include "glc2d.h"
+#include "d3dapp.h"
 
+using std::chrono::duration_cast;
+using std::chrono::steady_clock;
+using std::chrono::milliseconds;
 
 namespace glc2d
 {
-int					m_bActive = TRUE;
+bool				m_bActive = true;
 int					m_bCursor = TRUE;
 int					m_bState  = TRUE;
 
-HINSTANCE			m_hInst;
-HWND				m_hWnd;
-char				m_sCls[512];
-HICON				m_hIcon;
+HINSTANCE			m_hInst		{};
+HWND				m_hWnd		{};
+char				m_sCls		[512];
+HICON				m_hIcon		{};
+HACCEL				m_hAccel	{};
+
 
 POINT				m_scnPos	{};
 SIZE				m_scnSize	{640, 480};
@@ -45,16 +49,20 @@ float				m_scnScale	{1.2F};
 BOOL				m_fullMode	{FALSE};
 DWORD				m_dWinStyle	= WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU| WS_VISIBLE;
 
-LPDIRECT3D9			m_pD3D		;			// D3D
-D3DPRESENT_PARAMETERS m_d3dppWin	{};
-D3DPRESENT_PARAMETERS m_d3dppFull	{};
-LPDIRECT3DDEVICE9	m_pd3dDevice	{};		// Device
-ILcSpriteX*			m_pSprite		;		// 2D Sprite
+bool					m_bWindowed		{true};
+bool					m_bToggledEvent	{false};
+bool					m_bToggledWin	{m_bWindowed};
+bool					m_bDeviceLost	{};
+LPDIRECT3D9				m_pD3D			{};			// D3D
+D3DPRESENT_PARAMETERS	m_d3dppWin		{};
+D3DPRESENT_PARAMETERS	m_d3dppFull		{};
+LPDIRECT3DDEVICE9		m_pd3dDevice	{};		// Device
+ILcSpriteX*				m_pSprite		{};		// 2D Sprite
 
-DWORD				m_dColor = 0xFF006699;
-DWORD				m_dTimeBgn= ::timeGetTime();
-DWORD				m_dTimeElapsed=0;
-ILcInput*			m_pInput;
+DWORD						m_dColor	= 0xFF006699;
+steady_clock::time_point	m_timeBgn	= steady_clock::now();
+long long					m_timeElapsed=0;
+ILcInput*					m_pInput;
 
 int (*glc2d_FrameMove2D)();
 int (*glc2d_Render2D)();
@@ -129,6 +137,7 @@ HWND	glc2d_GetHwnd()			{	return glc2d::m_hWnd;				}
 int		glc2d_GetScnW()			{	return glc2d::m_scnSize.cx;			}
 int		glc2d_GetScnH()			{	return glc2d::m_scnSize.cy;			}
 float	glc2d_GetScnScale()		{	return glc2d::m_scnScale;			}
+bool	glc2d_GetWindowMode()	{	return glc2d::m_bWindowed;			}
 
 void	glc2d_SetWindowStyle(DWORD dSty)	{	glc2d::m_dWinStyle	= dSty;		}
 void	glc2d_SetStateShow(int _bShow)		{	glc2d::m_bState		= _bShow;	}
@@ -204,7 +213,7 @@ int glc2d_DrawAlphaOption(int nAlphaMethod)
 
 int FrameMove2D()
 {
-	glc2d::m_dTimeElapsed = ::timeGetTime() - glc2d::m_dTimeBgn;
+	glc2d::m_timeElapsed = duration_cast<milliseconds>(steady_clock::now() - glc2d::m_timeBgn).count();
 	if(glc2d::m_pInput)
 		glc2d::m_pInput->FrameMove();
 	return glc2d::glc2d_FrameMove2D();
@@ -223,14 +232,18 @@ int Render3D()
 
 	if( FAILED( glc2d::glc2d_Render2D() ) )
 	{
-		glc2d::m_pd3dDevice->EndScene();
-		glc2d::m_pd3dDevice->Present( 0, 0, 0, 0);
-		return 0;
+		// error check
+		int c;
+		c = 100;
 	};
 
 	glc2d::m_pd3dDevice->EndScene();
 
-	return glc2d::m_pd3dDevice->Present( 0, 0, 0, 0);
+	auto hr = glc2d::m_pd3dDevice->Present( 0, 0, 0, 0);
+	if(D3DERR_DEVICELOST == hr)
+		glc2d::m_bDeviceLost = true;
+
+	return S_OK;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd,unsigned int uMsg,WPARAM wParam,LPARAM lParam)
@@ -265,15 +278,11 @@ static int CreateD3D9()
 	glc2d::m_d3dppWin.BackBufferHeight			= UINT(glc2d::m_scnSize.cy * glc2d::m_scnScale);
 	glc2d::m_d3dppWin.EnableAutoDepthStencil	= TRUE;
 	glc2d::m_d3dppWin.AutoDepthStencilFormat	= D3DFMT_D24S8;
+	glc2d::m_d3dppFull.FullScreen_RefreshRateInHz= 0;
 	glc2d::m_d3dppWin.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;
-	//glc2d::m_d3dppWin..Flags					= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	glc2d::m_d3dppFull							= glc2d::m_d3dppWin;
 	glc2d::m_d3dppFull.Windowed					= FALSE;
-	glc2d::m_d3dppFull.BackBufferWidth			= glc2d::m_scnSize.cx;
-	glc2d::m_d3dppFull.BackBufferHeight			= glc2d::m_scnSize.cy;
-	glc2d::m_d3dppFull.FullScreen_RefreshRateInHz= 60;
-	glc2d::m_d3dppFull.PresentationInterval		= 0;
 
 	// D3D생성
 	if(NULL == (glc2d::m_pD3D = Direct3DCreate9(D3D_SDK_VERSION)))
@@ -312,7 +321,7 @@ int glc2d_InitSdk()
 	return 0;
 }
 
-int glc2d_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, int bFull, float scnScale)
+int glc2d_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bFull, float scnScale)
 {
 	strcpy(glc2d::m_sCls, sName);
 
@@ -321,6 +330,7 @@ int glc2d_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, int bFull, flo
 	glc2d::m_scnSize.cx = ScnW;
 	glc2d::m_scnSize.cy = ScnH;
 	glc2d::m_scnScale = scnScale;
+	glc2d_ChangeWindow(bFull);
 
 	glc2d::m_hInst =(HINSTANCE)GetModuleHandle(NULL);
 
@@ -378,9 +388,12 @@ int glc2d_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, int bFull, flo
 	return 0;
 }
 
-int glc2d_ChangeWindow(int bFull)
+int glc2d_ChangeWindow(bool bWindow)
 {
-	return -1;
+	glc2d::m_bToggledEvent = true;
+	glc2d::m_bToggledWin = bWindow;
+
+	return S_OK;
 }
 
 void glc2d_DestroyWin()
@@ -399,47 +412,85 @@ void glc2d_DestroyWin()
 }
 
 
-int	glc2d_Run()
+int glc2d_Run()
 {
-	int hr;
+	int hr = S_OK;
 
 	int bGotMsg = FALSE;
-    MSG  msg;
-    msg.message = WM_NULL;
-    PeekMessage( &msg, NULL, 0U, 0U, PM_NOREMOVE );
+	MSG msg = {0};
+	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
 
+	while(WM_QUIT != msg.message)
+	{
+		if(glc2d::m_bActive)
+		{
+			bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
+		}
+		else
+		{
+			bGotMsg = (GetMessage(&msg, NULL, 0U, 0U) != 0);
+		}
 
+		if(bGotMsg)
+		{
+			if(glc2d::m_hAccel == NULL ||
+				glc2d::m_hWnd == NULL ||
+				0 == TranslateAccelerator(glc2d::m_hWnd, glc2d::m_hAccel, &msg))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+		else
+		{
+			// Device Lost 확인 및 복구
+			hr = D3DCheckDevice();
+			if(FAILED(hr))
+			{
+				if(hr == D3DERR_DEVICELOST)
+				{
+					Sleep(100);
+					continue;
+				}
 
+				return hr;
+			}
 
-	while( WM_QUIT != msg.message  )
-    {
-        if( glc2d::m_bActive )
-            bGotMsg = ( PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ) != 0 );
-        else
-            bGotMsg = ( GetMessage( &msg, NULL, 0U, 0U ) != 0 );
+			// Window / Fullscreen 전환
+			if(glc2d::m_bToggledEvent)
+			{
+				hr = D3DToggleScreen();
+				if(FAILED(hr))
+				{
+					if(hr == D3DERR_DEVICELOST)
+					{
+						glc2d::m_bDeviceLost = true;
+						Sleep(100);
+						continue;
+					}
 
-        if( bGotMsg )
-        {
-            TranslateMessage( &msg );
-            DispatchMessage( &msg );
-        }
-        else
-        {
+					return hr;
+				}
+			}
+
 			if(FAILED(hr = FrameMove2D()))
+			{
 				break;
+			}
 
-			if(FAILED(hr =Render3D()))
+			if(FAILED(hr = Render3D()))
+			{
 				break;
-        }
-    }
+			}
+		}
+	}
 
 	return 0;
 }
 
 
-
-
-DWORD glc2d_TimeGetTime()
+long long glc2d_TimeGetTime()
 {
-	return ::timeGetTime() - glc2d::m_dTimeBgn;
+	auto elapsed = duration_cast<milliseconds>(steady_clock::now() - glc2d::m_timeBgn).count();
+	return elapsed;
 }

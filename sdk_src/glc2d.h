@@ -20,19 +20,31 @@
 #include <windows.h>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+enum EInput
+{
+    EINPUT_NONE  = 0,
+    EINPUT_DOWN  = 1,
+    EINPUT_UP	 = 2,
+    EINPUT_PRESS = 3,
+    EINPUT_DBCLC = 4,
+
+    MAX_INPUT_KEY = 256,
+    MAX_INPUT_BTN = 8,
+};
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Init Sdk
 int		glc2d_InitSdk();													// Initialize SDK
 
 // Create window and DirectX
 int		glc2d_CreateWin(int x,int y											// Screen position x, y
 						 , int ScnW, int ScnH								// Screen Width, height
-						 , CSTR sName, int bFull=FALSE						// Class name, Full screen mode
-						 , float scnScale = 1.2F							// Screen Scale
+						 , CSTR sName, bool bFull=true						// Class name, Full screen mode
+						 , float scnScale = 1.0F							// Screen Scale
 						 );
 
 void	glc2d_DestroyWin();													// 윈도우와 DirectX소멸
 int		glc2d_Run();														// 게임 루프
-int		glc2d_ChangeWindow(int bFull=TRUE);									// Change Window Mode
+int		glc2d_ChangeWindow(bool bWindow);									// Change Window Mode: windows: true, full: false
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setting the runtime Function pointer
@@ -56,6 +68,7 @@ HWND	glc2d_GetHwnd();													// 윈도우 핸들 얻기
 int		glc2d_GetScnW();													// 화면의 크기를 가져오기
 int		glc2d_GetScnH();													// 화면의 너비를 가져오기
 float	glc2d_GetScnScale();												// 화면의 scale 가져오기. fullmode: 1, window mode: xx
+bool	glc2d_GetWindowMode();												// 화면 모드. fullmode: false, window mode: true
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // setup env
@@ -107,6 +120,6 @@ BOOL	glc2d_SoundIsPlaying(int _nKey);									// 사운드 실행중?
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // etc
-DWORD	glc2d_TimeGetTime();												// return the time GetTime
+long long	glc2d_TimeGetTime();												// return the time GetTime
 
 #endif

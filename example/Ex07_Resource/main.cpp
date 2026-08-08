@@ -73,7 +73,7 @@ int FrameMove()
 	pKey = glc2d_GetKeyboard();
 	if(pKey[VK_SPACE])
 	{
-		glc2d_ChangeWindow();
+		glc2d_ChangeWindow(true);
 	}
 
 	return 0;

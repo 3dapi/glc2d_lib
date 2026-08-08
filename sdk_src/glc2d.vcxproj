@@ -107,6 +107,7 @@
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir ..\include
@@ -142,6 +143,7 @@ copy glc2d.h ..\include</Command>
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir ..\include
@@ -176,6 +178,7 @@ copy glc2d.h ..\include</Command>
       <PrecompiledHeaderOutputFile>.\Release\glc2d.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir ..\include
@@ -210,6 +213,7 @@ copy glc2d.h ..\include</Command>
       <PrecompiledHeaderOutputFile>.\Release\glc2d.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
       <Command>mkdir ..\include
@@ -230,6 +234,7 @@ copy glc2d.h ..\include</Command>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="d3dapp.cpp" />
     <ClCompile Include="dsutil.cpp" />
     <ClCompile Include="LcFont.cpp" />
     <ClCompile Include="LcInput.cpp" />
@@ -240,6 +245,7 @@ copy glc2d.h ..\include</Command>
     <ClCompile Include="LcTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="d3dapp.h" />
     <ClInclude Include="dsutil.h" />
     <ClInclude Include="glcInternal.h" />
     <ClInclude Include="glcType.h" />

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>glc2d</id>
+    <version>0.1.0.3</version>
+    <authors>HeesungOh</authors>
+    <description>GalicStudio Simple 2D graphics library for Visual C++</description>
+    <license type="expression">MIT</license>
+    <readme>README.md</readme>
+    <tags>native C++ graphics 2d glc2d</tags>
+  </metadata>
+
+  <files>
+    <file src="..\include\**\*" target="build\native\include" />
+    <file src="..\lib\**\*" target="build\native\lib" />
+    <file src="build\native\glc2d.props" target="build\native\glc2d.props" />
+    <file src="README.md" target="\" />
+  </files>
+</package>
