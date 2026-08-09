@@ -1,6 +1,7 @@
 ﻿
 #pragma warning(disable: 4996)
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <windows.h>
@@ -22,11 +23,13 @@ public:
 	CLcFont();
 	virtual	~CLcFont();
 
-	virtual	int		Create(void* p1=NULL,void* p2=NULL,void* p3=NULL,void* p4=NULL);
-	virtual	void	Destroy();
-	virtual	int		GetID();
+	virtual int		Create(void* p1={},void* p2={},void* p3={},void* p4={});
+	virtual void	Destroy();
 
-	virtual	void*	GetFont();
+	int		GetID() override;
+	void*	GetFont() override;
+	int		OnLostDevice() override;
+	int		OnResetDevice() override;
 
 	static int					m_nIDFnt;		// Font ID
 	static LPDIRECT3DDEVICE9	m_pDevice;		// Window Handle
@@ -63,6 +66,19 @@ void* CLcFont::GetFont()
 {
 	return m_pFnt;
 }
+
+int CLcFont::OnResetDevice()
+{
+	int hr = m_pFnt->OnResetDevice();
+	return hr;
+}
+
+int CLcFont::OnLostDevice()
+{
+	int hr = m_pFnt->OnLostDevice();
+	return hr;
+}
+
 
 int CLcFont::Create(void* p1,void* p2,void* p3,void* p4)
 {
@@ -139,37 +155,40 @@ int LcDev_FontInit(void* pDev)
 
 void LcDev_FontDestroy()
 {
-	size_t iSize = glc2d::m_vFont.size();
-	for(size_t i=0; i<iSize; ++i)
+	for(auto& v : m_vFont)
 	{
-		SAFE_DELETE( m_vFont[i]	);
+		SAFE_DELETE( v	);
 	}
 	m_vFont.clear();
 }
 
 ILcFont* LcDev_FontFind(int _nID)
 {
-	int iSize = m_vFont.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		if(m_vFont[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
-	{
-		return 0;
-	}
-
-	return m_vFont[nIdx];
-
+	auto itr = std::find_if(m_vFont.begin(), m_vFont.end()
+		, [_nID](const auto& p){ return p ->GetID() == _nID;});
+	return itr != m_vFont.end() ? *itr : nullptr;
 }
 
+int LcDev_FontOnLostDevice()
+{
+	for(auto & font : m_vFont)
+	{
+		int hr = font->OnLostDevice();
+		if(FAILED(hr))
+			return hr;
+	}
+	return S_OK;
+}
+int LcDev_FontOnResetDevice()
+{
+	for(auto& font : m_vFont)
+	{
+		int hr = font->OnResetDevice();
+		if(FAILED(hr))
+			return hr;
+	}
+	return S_OK;
+}
 
 };// namespace glc2d
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,32 +249,35 @@ int glc2d_FontDrawText(int nIdx
     return pDxFnt->DrawText(NULL, s.c_str(), -1, &rc, 0, fontColor );
 }
 
+//int glc2d_FontRelease(int _nID)
+//{
+//	auto itr = glc2d::m_vFont.end();
+//	for(auto it = glc2d::m_vFont.begin(); it != glc2d::m_vFont.end(); ++it)
+//	{
+//		if((*it)->GetID() == _nID)
+//		{
+//			itr = it;
+//			break;
+//		}
+//	}
+//	if(itr == glc2d::m_vFont.end())
+//		return -1;
+//
+//	SAFE_DELETE(*itr);
+//	glc2d::m_vFont.erase(itr);
+//	return static_cast<int>(glc2d::m_vFont.size());
+//}
 
 int glc2d_FontRelease(int _nID)
 {
-	int iSize = glc2d::m_vFont.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
+	auto itr = std::find_if(glc2d::m_vFont.begin(), glc2d::m_vFont.end()
+	, [_nID](const auto& p){ return p ->GetID() == _nID;});
+	if(itr == glc2d::m_vFont.end())
 	{
-		if(glc2d::m_vFont[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
 		return -1;
-
-
-	glc2d::lsLcFont::iterator	itFont;
-
-	itFont = glc2d::m_vFont.begin() + nIdx;
-	SAFE_DELETE( glc2d::m_vFont[nIdx]		);
-	glc2d::m_vFont.erase(itFont);
-
-	iSize = glc2d::m_vFont.size();
-
-	return iSize;
+	}
+	SAFE_DELETE(*itr);
+	glc2d::m_vFont.erase(itr);
+	return static_cast<int>(glc2d::m_vFont.size());
 }
+

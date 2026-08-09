@@ -1,17 +1,9 @@
 ﻿#pragma warning(disable: 4996)
 
-#define STRICT
-
 #include <chrono>
-#include <windows.h>
-#include <windowsx.h>
-#include <mmsystem.h>
-#include <stdio.h>
-#include <tchar.h>
-#include <D3D9.h>
-
 #include "d3dapp.h"
 #include "ILcSpriteX.h"
+#include "ILcFont.h"
 
 using std::chrono::steady_clock;
 
@@ -43,6 +35,7 @@ namespace glc2d
 	extern steady_clock::time_point	m_timeBgn		;
 	extern long long 				m_dTimeElapsed	;
 }
+
 
 int D3DRestoreDevice()
 {
@@ -102,11 +95,15 @@ int D3DResetDevice(bool bWindowed)
 	D3DPRESENT_PARAMETERS d3dParam = bWindowed? glc2d::m_d3dppWin : glc2d::m_d3dppFull;
 	if(glc2d::m_pSprite)
 		glc2d::m_pSprite->OnLostDevice();
+	hr = glc2d::LcDev_FontOnLostDevice();
+
 	if(FAILED(hr = glc2d::m_pd3dDevice->Reset(&d3dParam)))
 		return hr;
 	// Sprite Reset
 	if(glc2d::m_pSprite)
 		glc2d::m_pSprite->OnResetDevice();
+
+	hr = glc2d::LcDev_FontOnResetDevice();
 
 	return S_OK;
 }

@@ -3,6 +3,7 @@
 
 #pragma warning(disable: 4996)
 
+#include <algorithm>
 #include <vector>
 
 #include <windows.h>
@@ -260,7 +261,7 @@ int CLcModel2D::Create(void* p1, void* p2, void* p3, void* p4)
 
 void CLcModel2D::Render()
 {
-	LPDIRECT3DTEXTURE9	pTex = (LPDIRECT3DTEXTURE9)m_AniTex->GetTexture();
+	auto pTex = (LPDIRECT3DTEXTURE9)m_AniTex->GetTexture();
 
 	m_pSprite->Begin();
 	m_pSprite->Draw(pTex, &m_ImgRc, NULL, &m_vcPos, m_dColor);
@@ -269,39 +270,23 @@ void CLcModel2D::Render()
 
 ILcModel* LcDev_ModelFind(CSTR sFile)
 {
-	auto _F = CLcModel2D::m_vModel->begin();
-	auto _L = CLcModel2D::m_vModel->end();
-
-	for(; _F != _L; ++_F)
-	{
-		if( 0 == _stricmp((*_F)->GetName(), sFile))
-			return *_F;
-	}
-
-	return NULL;
+	auto itr = std::find_if(CLcModel2D::m_vModel->begin(), CLcModel2D::m_vModel->end()
+		, [sFile](const auto& p){return 0 == _stricmp(p->GetName(), sFile);});
+	return itr != CLcModel2D::m_vModel->end() ? *itr : nullptr;
 }
 
 ILcModel* LcDev_ModelFind(int _nID)
 {
-	auto _F = CLcModel2D::m_vModel->begin();
-	auto _L = CLcModel2D::m_vModel->end();
-
-	for(; _F != _L; ++_F)
-	{
-		int nID = (*_F)->GetID();
-
-		if( nID == _nID)
-			return *_F;
-	}
-
-	return NULL;
+	auto itr = std::find_if(CLcModel2D::m_vModel->begin(), CLcModel2D::m_vModel->end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	return itr != CLcModel2D::m_vModel->end() ? *itr : nullptr;
 }
 
 int LcDev_ModelCreate(ILcModel** pData, void* p1, void* p2, void* p3, void* p4)
 {
-	CSTR sModelName = (CSTR)p1;
+	auto sModelName = (CSTR)p1;
 	*pData = {};
-	CLcModel2D* pObj = (CLcModel2D*)LcDev_ModelFind((CSTR)sModelName);
+	auto pObj = (CLcModel2D*)LcDev_ModelFind((CSTR)sModelName);
 
 	if(pObj)
 	{

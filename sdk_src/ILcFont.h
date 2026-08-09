@@ -17,6 +17,8 @@ interface	ILcFont
 
 	virtual	int		GetID()=0;
 	virtual	void*	GetFont()=0;
+	virtual	int		OnLostDevice()=0;
+	virtual	int		OnResetDevice()=0;
 };
 
 int LcDev_FontCreate(ILcFont** pData
@@ -29,6 +31,8 @@ int LcDev_FontCreate(ILcFont** pData
 int			LcDev_FontInit(void* pd3dDevice);
 ILcFont*	LcDev_FontFind(int _nID);
 void		LcDev_FontDestroy();
+int			LcDev_FontOnLostDevice();
+int			LcDev_FontOnResetDevice();
 
 }//namespace glc2d
 

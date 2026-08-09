@@ -1,4 +1,5 @@
 ﻿
+#include <algorithm>
 #include <vector>
 
 #include <windows.h>
@@ -26,12 +27,12 @@ public:
 
 	virtual	int		Create(void* p1=NULL,void* p2=NULL,void* p3=NULL,void* p4=NULL);
 	virtual	void	Destroy();
-	virtual	int		GetID();
 
-	virtual	int		Play();
-	virtual	int		Stop();
-	virtual	int		Reset();
-	virtual	int		GetState();
+	int		GetID() override;
+	int		Play() override;
+	int		Stop() override;
+	int		Reset() override;
+	int		GetState() override;
 
 
 	static int				m_nIDSound	;		// Sound ID
@@ -178,24 +179,9 @@ void LcDev_SoundDestroy()
 
 ILcSound* LcDev_SoundFind(int _nID)
 {
-	int iSize = m_vSound.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		if(m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
-	{
-		return 0;
-	}
-
-	return m_vSound[nIdx];
+	auto itr = std::find_if(m_vSound.begin(), m_vSound.end()
+	, [_nID](const auto& p){return p->GetID() == _nID;});
+	return itr != m_vSound.end() ? *itr : nullptr;
 }
 
 
@@ -217,109 +203,53 @@ int glc2d_SoundLoad(CSTR sFileName)
 
 int glc2d_SoundRelease(int _nID)
 {
-	int iSize = glc2d::m_vSound.size();
-	int	nIdx=-1;
+	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	for(int i=0; i<iSize; ++i)
-	{
-		if(glc2d::m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
+	if(itr == glc2d::m_vSound.end())
 		return -1;
 
-
-	glc2d::lsLcSound::iterator	itSound;
-
-	itSound = glc2d::m_vSound.begin() + nIdx;
-	SAFE_DELETE( glc2d::m_vSound[nIdx]		);
-	glc2d::m_vSound.erase(itSound);
-
-	iSize = glc2d::m_vSound.size();
-
-	return iSize;
+	glc2d::m_vSound.erase(itr);
+	return static_cast<int>(glc2d::m_vSound.size());
 }
 
 void glc2d_SoundPlay(int _nID)
 {
-	int iSize = glc2d::m_vSound.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		if(glc2d::m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
+	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	
+	if(itr == glc2d::m_vSound.end())
 		return;
-
-	glc2d::m_vSound[nIdx]->Play();
+	(*itr)->Play();
 }
 
 void glc2d_SoundStop(int _nID)
 {
-	int iSize = glc2d::m_vSound.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		if(glc2d::m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
+	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	
+	if(itr == glc2d::m_vSound.end())
 		return;
-
-	glc2d::m_vSound[nIdx]->Stop();
+	(*itr)->Stop();
 }
 
 void glc2d_SoundReset(int _nID)
 {
-	int iSize = glc2d::m_vSound.size();
-	int	nIdx=-1;
+	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	for(int i=0; i<iSize; ++i)
-	{
-		if(glc2d::m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
+	if(itr == glc2d::m_vSound.end())
 		return;
-
-	glc2d::m_vSound[nIdx]->Reset();
+	(*itr)->Reset();
 }
 
-BOOL glc2d_SoundIsPlaying(int _nID)
+bool glc2d_SoundIsPlaying(int _nID)
 {
-	int iSize = glc2d::m_vSound.size();
-	int	nIdx=-1;
+	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	for(int i=0; i<iSize; ++i)
-	{
-		if(glc2d::m_vSound[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
-		return 0;
-
-	return glc2d::m_vSound[nIdx]->GetState();
+	if(itr == glc2d::m_vSound.end())
+		return {};
+	auto ret = (*itr)->GetState();
+	return ret;
 }

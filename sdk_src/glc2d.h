@@ -116,7 +116,7 @@ int		glc2d_SoundRelease(int _nKey);										// 사운드 객체 해제
 void	glc2d_SoundPlay(int _nKey);											// 사운드 실행
 void	glc2d_SoundStop(int _nKey);											// 사운드 멈춤
 void	glc2d_SoundReset(int _nKey);										// 사운드 리셋
-BOOL	glc2d_SoundIsPlaying(int _nKey);									// 사운드 실행중?
+bool	glc2d_SoundIsPlaying(int _nKey);									// 사운드 실행중?
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // etc

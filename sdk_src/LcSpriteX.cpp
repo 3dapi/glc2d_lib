@@ -158,11 +158,11 @@ int CLcSpriteX::Create(void* p1, void* p2, void* p3, void* p4)
 	// 컴파일
 	hr = D3DXCreateEffect(	m_pDev
 							, sShader
-							, strlen(sShader)-4
-							, NULL
-							, NULL
+							, UINT(strlen(sShader)-4)
+							, nullptr
+							, nullptr
 							, dFlag
-							, NULL
+							, nullptr
 							, &m_pEft
 							, &pError);
 	if(FAILED(hr))
@@ -195,13 +195,14 @@ int CLcSpriteX::OnResetDevice()
 	m_nScnW = desc.Width;
 	m_nScnH = desc.Height;
 	pSfc->Release();
-
-	return m_pEft->OnResetDevice();
+	int hr = m_pEft->OnResetDevice();
+	return hr;
 }
 
 int CLcSpriteX::OnLostDevice()
 {
-	return m_pEft->OnLostDevice();
+	int hr = m_pEft->OnLostDevice();
+	return hr;
 }
 
 int CLcSpriteX::Draw(void* pTex				// Texture

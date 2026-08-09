@@ -85,7 +85,7 @@ int Render()
 
 	glc2d_Draw2D(nTx1, &rt1);
 
-	glc2d_FontDrawText(nFont2, 10, 10, 500, 40, 0xffffFF00, "마우스의 오른쪽 버튼을 눌러봐봐!!!");
+	glc2d_FontDrawText(nFont2, 10, 10, 500, 40, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
 
 	if( glc2d_GetMouseEvent(1))		// R button
 	{

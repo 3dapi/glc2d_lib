@@ -1,4 +1,5 @@
 ﻿
+#include <algorithm>
 #include <vector>
 
 #include <windows.h>
@@ -168,68 +169,31 @@ int LcDev_TextureInit(void* pDev)
 
 void LcDev_TextureDestroy()
 {
-	int iSize = m_vTex.size();
-
-	for(int i=0; i<iSize; ++i)
+	for(auto v : m_vTex)
 	{
-		SAFE_DELETE( m_vTex[i]	);
+		SAFE_DELETE( v );
 	}
-
 	m_vTex.clear();
 }
 
-
 ILcTexture* LcDev_TextureFind(int _nID)
 {
-	int iSize = m_vTex.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		if(m_vTex[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
-	{
-		return NULL;
-	}
-
-	return m_vTex[nIdx];
-
+	auto itr = std::find_if(m_vTex.begin(), m_vTex.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	return itr != m_vTex.end() ? *itr : nullptr;
 }
-
-
 
 ILcTexture* LcDev_TextureFind(CSTR sFile)
 {
-	int iSize = m_vTex.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
-	{
-		ILcTexture* _pTex = m_vTex[i];
-		CLcTexture* pTex = (CLcTexture*)_pTex;
-
-		if(0 == _stricmp(pTex->GetName(), sFile))
+	auto itr = std::find_if(m_vTex.begin(), m_vTex.end()
+		, [sFile](const auto& p)
 		{
-			nIdx = i;
-			break;
+			auto pTex = (CLcTexture*)p;
+			return 0 ==:: _stricmp(pTex->GetName(), sFile);
 		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
-	{
-		return NULL;
-	}
-
-	return m_vTex[nIdx];
-
+	);
+	return itr != glc2d::m_vTex.end() ? *itr : nullptr;
 }
-
 
 int LcDev_TextureCreate(ILcTexture** pData
 					, void* p1
@@ -239,7 +203,7 @@ int LcDev_TextureCreate(ILcTexture** pData
 					)
 {
 	*pData = {};
-	CLcTexture*	pObj = (CLcTexture*)LcDev_TextureFind((CSTR)p1);	// Texture를 파일 이름으로 찾는다.
+	CLcTexture*	pObj = (CLcTexture*)LcDev_TextureFind((CSTR)p1);	// Texture 를 파일 이름으로 찾는다.
 	if(pObj)
 	{
 		*pData = pObj;
@@ -273,69 +237,37 @@ int	glc2d_TextureLoad(CSTR sFileName, DWORD dc)
 
 int glc2d_TextureRelease(int _nID)
 {
-	int iSize = glc2d::m_vTex.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
+	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	if(itr == glc2d::m_vTex.end())
 	{
-		if(glc2d::m_vTex[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
 		return -1;
-
-	glc2d::lsPDTX::iterator	itTx;
-
-	itTx = glc2d::m_vTex.begin() + nIdx;
-	SAFE_DELETE(	glc2d::m_vTex[nIdx]	);
-	glc2d::m_vTex.erase(itTx);
-
-	iSize = glc2d::m_vTex.size();
-
-	return iSize;
+	}
+	SAFE_DELETE(*itr);
+	glc2d::m_vTex.erase(itr);
+	return static_cast<int>(glc2d::m_vTex.size());
 }
 
 int glc2d_TextureWidth(int _nID)
 {
-	int iSize = glc2d::m_vTex.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
+	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	if(itr == glc2d::m_vTex.end())
 	{
-		if(glc2d::m_vTex[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
 		return -1;
-
-	return (int)glc2d::m_vTex[nIdx]->GetImageWidth();
+	}
+	auto ret = *itr;
+	return ret->GetImageWidth();
 }
-
 
 int glc2d_TextureHeight(int _nID)
 {
-	int iSize = glc2d::m_vTex.size();
-	int	nIdx=-1;
-
-	for(int i=0; i<iSize; ++i)
+	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+		, [_nID](const auto& p){return p->GetID() == _nID;});
+	if(itr == glc2d::m_vTex.end())
 	{
-		if(glc2d::m_vTex[i]->GetID() == _nID)
-		{
-			nIdx = i;
-			break;
-		}
-	}
-
-	if(nIdx<0 || nIdx>=iSize)
 		return -1;
-
-	return (int)glc2d::m_vTex[nIdx]->GetImageHeight();
+	}
+	auto ret = *itr;
+	return ret->GetImageHeight();
 }
