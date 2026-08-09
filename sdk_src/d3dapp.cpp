@@ -18,7 +18,6 @@ namespace glc
 	extern POINT				m_scnPos			;
 	extern SIZE					m_scnSize			;
 	extern float				m_scnScale			;
-	extern BOOL					m_fullMode			;
 	extern DWORD				m_dWinStyle			;
 
 	extern bool						m_bWindowed		;

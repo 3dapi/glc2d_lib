@@ -46,13 +46,19 @@ HACCEL				m_hAccel	{};
 POINT				m_scnPos	{};
 SIZE				m_scnSize	{640, 480};
 float				m_scnScale	{1.2F};
-BOOL				m_fullMode	{FALSE};
 DWORD				m_dWinStyle	= WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU| WS_VISIBLE;
 
-bool					m_bWindowed		{true};
-bool					m_bToggledEvent	{false};
-bool					m_bToggledWin	{m_bWindowed};
-bool					m_bDeviceLost	{};
+bool				m_bWindowed		{true};
+bool				m_bToggledEvent	{false};
+bool				m_bToggledWin	{m_bWindowed};
+bool				m_bDeviceLost	{};
+
+DWORD						m_dColor	= 0xFF006699;
+steady_clock::time_point	m_timeBgn	= steady_clock::now();
+long long					m_timeElapsed=0;
+ILcInput*					m_pInput	{};
+
+
 LPDIRECT3D9				m_pD3D			{};			// D3D
 D3DPRESENT_PARAMETERS	m_d3dppWin		{};
 D3DPRESENT_PARAMETERS	m_d3dppFull		{};
@@ -60,10 +66,6 @@ LPDIRECT3DDEVICE9		m_pd3dDevice	{};		// Device
 ILcSpriteX*				m_pLcSprite		{};		// 2D Sprite
 LPD3DXSPRITE			m_pd3dSprite	{};		// DX Sprite for font draw
 D3DXMATRIX				m_tmSprite	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};	
-DWORD						m_dColor	= 0xFF006699;
-steady_clock::time_point	m_timeBgn	= steady_clock::now();
-long long					m_timeElapsed=0;
-ILcInput*					m_pInput;
 
 int (*g2_FrameMove2D)();
 int (*g2_Render2D)();
@@ -73,8 +75,8 @@ int (*g2_Mouse)(int x, int y, int z, int _event);
 
 }// namespace glc
 
-int g2_DefaultFrameMove()	{	return 0;	}
-int g2_DefaultRender()		{	return 0;	}
+int g2_DefaultFrameMove()		{	return 0;	}
+int g2_DefaultRender()			{	return 0;	}
 int g2_DefaultKeyboard(uint8_t*){	return 0;	}
 int g2_DefaultMouse(int, int, int, int){	return 0;	}
 
@@ -133,12 +135,12 @@ int g2_GetMouseEvent(int nMouse)
 	return nState;
 }
 
-DWORD	g2_GetWindowStyle()				{	return glc::m_dWinStyle;			}
-HWND	g2_GetHwnd()					{	return glc::m_hWnd;					}
-int		g2_GetScnW()					{	return glc::m_scnSize.cx;			}
-int		g2_GetScnH()					{	return glc::m_scnSize.cy;			}
-float	g2_GetScnScale()				{	return glc::m_scnScale;				}
-bool	g2_GetWindowMode()				{	return glc::m_bWindowed;			}
+DWORD	g2_GetWindowStyle()				{	return glc::m_dWinStyle;		}
+HWND	g2_GetHwnd()					{	return glc::m_hWnd;				}
+int		g2_GetScnW()					{	return glc::m_scnSize.cx;		}
+int		g2_GetScnH()					{	return glc::m_scnSize.cy;		}
+float	g2_GetScnScale()				{	return glc::m_scnScale;			}
+bool	g2_GetWindowMode()				{	return glc::m_bWindowed;		}
 
 void	g2_SetWindowStyle(DWORD dSty)	{	glc::m_dWinStyle	= dSty;		}
 void	g2_SetStateShow(int _bShow)		{	glc::m_bState		= _bShow;	}
@@ -214,7 +216,6 @@ int g2_DrawAlphaOption(int nAlphaMethod)
 
 int FrameMove2D()
 {
-	glc::m_timeElapsed = duration_cast<milliseconds>(steady_clock::now() - glc::m_timeBgn).count();
 	if(glc::m_pInput)
 		glc::m_pInput->FrameMove();
 	return glc::g2_FrameMove2D();
@@ -222,12 +223,7 @@ int FrameMove2D()
 
 int Render3D()
 {
-	glc::m_pd3dDevice->Clear( 0
-						, NULL
-						, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER
-						, glc::m_dColor
-						, 1.0f, 0 );
-
+	glc::m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, glc::m_dColor, 1.0f, 0 );
 	if( FAILED( glc::m_pd3dDevice->BeginScene() ) )
 		return -1;
 
@@ -252,7 +248,6 @@ LRESULT CALLBACK WndProc(HWND hWnd,unsigned int uMsg,WPARAM wParam,LPARAM lParam
 	WPARAM wHi = HIWORD(wParam);
 	WPARAM wLo = LOWORD(wParam);
 
-
 	if(glc::m_pInput)
 		glc::m_pInput->MsgProc(hWnd, uMsg, wParam, lParam);
 
@@ -272,14 +267,14 @@ static int CreateD3D9()
 {
 	glc::m_d3dppWin.Windowed					= TRUE;
 	glc::m_d3dppWin.hDeviceWindow				= glc::m_hWnd;
-	glc::m_d3dppWin.SwapEffect				= D3DSWAPEFFECT_DISCARD;
+	glc::m_d3dppWin.SwapEffect					= D3DSWAPEFFECT_DISCARD;
 	glc::m_d3dppWin.BackBufferFormat			= D3DFMT_X8R8G8B8;
-	glc::m_d3dppWin.BackBufferCount			= 1;
-	glc::m_d3dppWin.BackBufferWidth			= UINT(glc::m_scnSize.cx * glc::m_scnScale);
+	glc::m_d3dppWin.BackBufferCount				= 1;
+	glc::m_d3dppWin.BackBufferWidth				= UINT(glc::m_scnSize.cx * glc::m_scnScale);
 	glc::m_d3dppWin.BackBufferHeight			= UINT(glc::m_scnSize.cy * glc::m_scnScale);
-	glc::m_d3dppWin.EnableAutoDepthStencil	= TRUE;
-	glc::m_d3dppWin.AutoDepthStencilFormat	= D3DFMT_D24S8;
-	glc::m_d3dppFull.FullScreen_RefreshRateInHz= 0;
+	glc::m_d3dppWin.EnableAutoDepthStencil		= TRUE;
+	glc::m_d3dppWin.AutoDepthStencilFormat		= D3DFMT_D24S8;
+	glc::m_d3dppWin.FullScreen_RefreshRateInHz	= 0;
 	glc::m_d3dppWin.PresentationInterval		= D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	glc::m_d3dppFull							= glc::m_d3dppWin;
@@ -415,23 +410,25 @@ void g2_DestroyWin()
 	glc::LcDev_SoundDestroy();
 	glc::LcDev_ModelDestroy();
 
-	if(glc::m_pInput)		{	delete glc::m_pInput;			glc::m_pInput = {};		}
-	if(glc::m_pLcSprite)	{	delete glc::m_pLcSprite;		glc::m_pLcSprite = {};		}
-	if(glc::m_pd3dDevice)	{	glc::m_pd3dDevice->Release();	glc::m_pd3dDevice = {};	}
-	if(glc::m_pD3D)		{	glc::m_pD3D->Release();		glc::m_pD3D = {};			}
+	if(glc::m_pInput)	{	delete glc::m_pInput;			glc::m_pInput = {};		}
+	if(glc::m_pLcSprite){	delete glc::m_pLcSprite;		glc::m_pLcSprite = {};	}
+	if(glc::m_pd3dSprite){	glc::m_pd3dSprite->Release();	glc::m_pd3dSprite = {};	}
+	if(glc::m_pd3dDevice){	glc::m_pd3dDevice->Release();	glc::m_pd3dDevice = {};	}
+	if(glc::m_pD3D)		{	glc::m_pD3D->Release();			glc::m_pD3D = {};		}
 }
-
 
 int g2_Run()
 {
 	int hr = S_OK;
-
 	int bGotMsg = FALSE;
 	MSG msg = {0};
 	PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
 
 	while(WM_QUIT != msg.message)
 	{
+		g2_TimeGetTime();
+
+		// process window messages
 		if(glc::m_bActive)
 		{
 			bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
@@ -440,7 +437,6 @@ int g2_Run()
 		{
 			bGotMsg = (GetMessage(&msg, NULL, 0U, 0U) != 0);
 		}
-
 		if(bGotMsg)
 		{
 			if(glc::m_hAccel == NULL ||
@@ -450,57 +446,53 @@ int g2_Run()
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
+			continue;
 		}
-		else
+
+		// Device Lost 확인 및 복구
+		hr = D3DCheckDevice();
+		if(FAILED(hr))
 		{
-			// Device Lost 확인 및 복구
-			hr = D3DCheckDevice();
+			if(hr == D3DERR_DEVICELOST)
+			{
+				Sleep(100);
+				continue;
+			}
+
+			return hr;
+		}
+		// Window / Fullscreen 전환
+		if(glc::m_bToggledEvent)
+		{
+			hr = D3DToggleScreen();
 			if(FAILED(hr))
 			{
 				if(hr == D3DERR_DEVICELOST)
 				{
+					glc::m_bDeviceLost = true;
 					Sleep(100);
 					continue;
 				}
-
 				return hr;
 			}
-
-			// Window / Fullscreen 전환
-			if(glc::m_bToggledEvent)
-			{
-				hr = D3DToggleScreen();
-				if(FAILED(hr))
-				{
-					if(hr == D3DERR_DEVICELOST)
-					{
-						glc::m_bDeviceLost = true;
-						Sleep(100);
-						continue;
-					}
-
-					return hr;
-				}
-			}
-
-			if(FAILED(hr = FrameMove2D()))
-			{
-				break;
-			}
-
-			if(FAILED(hr = Render3D()))
-			{
-				break;
-			}
+		}
+		// update game data
+		if(FAILED(hr = FrameMove2D()))
+		{
+			break;
+		}
+		// rendering game data
+		if(FAILED(hr = Render3D()))
+		{
+			break;
 		}
 	}
 
 	return 0;
 }
 
-
 long long g2_TimeGetTime()
 {
-	auto elapsed = duration_cast<milliseconds>(steady_clock::now() - glc::m_timeBgn).count();
-	return elapsed;
+	glc::m_timeElapsed = duration_cast<milliseconds>(steady_clock::now() - glc::m_timeBgn).count();
+	return glc::m_timeElapsed;
 }
