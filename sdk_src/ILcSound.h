@@ -8,7 +8,7 @@
 #include "glcType.h"
 #include "glcInternal.h"
 
-namespace glc2d
+namespace glc
 {
 
 interface	ILcSound
@@ -34,6 +34,6 @@ int			LcDev_SoundInit(void* hWnd);
 ILcSound*	LcDev_SoundFind(int nID);
 void		LcDev_SoundDestroy();
 
-}//namespace glc2d
+}//namespace glc
 
 #endif

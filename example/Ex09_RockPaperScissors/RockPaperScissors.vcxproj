@@ -234,12 +234,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="GamePlay.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RockPaperScissors.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GameHeader.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

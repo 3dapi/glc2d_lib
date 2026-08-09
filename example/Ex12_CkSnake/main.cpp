@@ -45,74 +45,74 @@ int main()
 	printf("Play Snake Game!\n\n");
 
 	//배경색을 바꾼다.
-	glc2d_SetClearColor(0xFFc8c8c8);
+	g2_SetClearColor(0xFFc8c8c8);
 
 	// 아이콘을 바꾼다.
-	glc2d_SetWindowIcon(IDI_MAIN_ICON);
+	g2_SetWindowIcon(IDI_MAIN_ICON);
 
 	// 윈도우를 만든다.
-	glc2d_CreateWin(100, 100, 640, 480, "- Snake Game", false, 1.6F);
+	g2_CreateWin(100, 100, 640, 480, "- Snake Game", true, 1.6F);
 
-	g_nFont1	= glc2d_FontCreate("굴림", 15, 0);
+	g_nFont1	= g2_FontCreate("굴림", 15, 0);
 
 	// 그림을 프로그램에 로딩
-	ScreenSrc[0].nTx = glc2d_TextureLoad("Texture/Header1.bmp",0xFFFF00FF);
-	ScreenSrc[0].iImgW = glc2d_TextureWidth(ScreenSrc[0].nTx);
-	ScreenSrc[0].iImgH = glc2d_TextureHeight(ScreenSrc[0].nTx);
+	ScreenSrc[0].nTx = g2_TextureLoad("Texture/Header1.bmp",0xFFFF00FF);
+	ScreenSrc[0].iImgW = g2_TextureWidth(ScreenSrc[0].nTx);
+	ScreenSrc[0].iImgH = g2_TextureHeight(ScreenSrc[0].nTx);
 
-	ScreenSrc[1].nTx = glc2d_TextureLoad("Texture/Tail.bmp",0xFFFF00FF);
-	ScreenSrc[1].iImgW = glc2d_TextureWidth(ScreenSrc[1].nTx);
-	ScreenSrc[1].iImgH = glc2d_TextureHeight(ScreenSrc[1].nTx);
+	ScreenSrc[1].nTx = g2_TextureLoad("Texture/Tail.bmp",0xFFFF00FF);
+	ScreenSrc[1].iImgW = g2_TextureWidth(ScreenSrc[1].nTx);
+	ScreenSrc[1].iImgH = g2_TextureHeight(ScreenSrc[1].nTx);
 
-	ScreenSrc[2].nTx = glc2d_TextureLoad("Texture/BG1.bmp",0xFFFF00FF);
-	ScreenSrc[2].iImgW = glc2d_TextureWidth(ScreenSrc[2].nTx);
-	ScreenSrc[2].iImgH = glc2d_TextureHeight(ScreenSrc[2].nTx);
+	ScreenSrc[2].nTx = g2_TextureLoad("Texture/BG1.bmp",0xFFFF00FF);
+	ScreenSrc[2].iImgW = g2_TextureWidth(ScreenSrc[2].nTx);
+	ScreenSrc[2].iImgH = g2_TextureHeight(ScreenSrc[2].nTx);
 
-	ScreenSrc[3].nTx = glc2d_TextureLoad("Texture/BG2.bmp");
-	ScreenSrc[3].iImgW = glc2d_TextureWidth(ScreenSrc[3].nTx);
-	ScreenSrc[3].iImgH = glc2d_TextureHeight(ScreenSrc[3].nTx);
+	ScreenSrc[3].nTx = g2_TextureLoad("Texture/BG2.bmp");
+	ScreenSrc[3].iImgW = g2_TextureWidth(ScreenSrc[3].nTx);
+	ScreenSrc[3].iImgH = g2_TextureHeight(ScreenSrc[3].nTx);
 
-	ScreenSrc[4].nTx = glc2d_TextureLoad("Texture/rol.bmp");
-	ScreenSrc[4].iImgW = glc2d_TextureWidth(ScreenSrc[4].nTx);
-	ScreenSrc[4].iImgH = glc2d_TextureHeight(ScreenSrc[4].nTx);
+	ScreenSrc[4].nTx = g2_TextureLoad("Texture/rol.bmp");
+	ScreenSrc[4].iImgW = g2_TextureWidth(ScreenSrc[4].nTx);
+	ScreenSrc[4].iImgH = g2_TextureHeight(ScreenSrc[4].nTx);
 
-	ScreenSrc[5].nTx = glc2d_TextureLoad("Texture/Food1.bmp",0xFFFF00FF);
-	ScreenSrc[5].iImgW = glc2d_TextureWidth(ScreenSrc[5].nTx);
-	ScreenSrc[5].iImgH = glc2d_TextureHeight(ScreenSrc[5].nTx);
+	ScreenSrc[5].nTx = g2_TextureLoad("Texture/Food1.bmp",0xFFFF00FF);
+	ScreenSrc[5].iImgW = g2_TextureWidth(ScreenSrc[5].nTx);
+	ScreenSrc[5].iImgH = g2_TextureHeight(ScreenSrc[5].nTx);
 
-	ScreenSrc[6].nTx = glc2d_TextureLoad("Texture/item1.bmp",0xFFFF00FF);
-	ScreenSrc[6].iImgW = glc2d_TextureWidth(ScreenSrc[6].nTx);
-	ScreenSrc[6].iImgH = glc2d_TextureHeight(ScreenSrc[6].nTx);
+	ScreenSrc[6].nTx = g2_TextureLoad("Texture/item1.bmp",0xFFFF00FF);
+	ScreenSrc[6].iImgW = g2_TextureWidth(ScreenSrc[6].nTx);
+	ScreenSrc[6].iImgH = g2_TextureHeight(ScreenSrc[6].nTx);
 
-	ScreenSrc[7].nTx = glc2d_TextureLoad("Texture/item2.bmp",0xFFFF00FF);
-	ScreenSrc[7].iImgW = glc2d_TextureWidth(ScreenSrc[7].nTx);
-	ScreenSrc[7].iImgH = glc2d_TextureHeight(ScreenSrc[7].nTx);
+	ScreenSrc[7].nTx = g2_TextureLoad("Texture/item2.bmp",0xFFFF00FF);
+	ScreenSrc[7].iImgW = g2_TextureWidth(ScreenSrc[7].nTx);
+	ScreenSrc[7].iImgH = g2_TextureHeight(ScreenSrc[7].nTx);
 
-	ScreenSrc[8].nTx = glc2d_TextureLoad("Texture/bg3.bmp");
-	ScreenSrc[8].iImgW = glc2d_TextureWidth(ScreenSrc[8].nTx);
-	ScreenSrc[8].iImgH = glc2d_TextureHeight(ScreenSrc[8].nTx);
+	ScreenSrc[8].nTx = g2_TextureLoad("Texture/bg3.bmp");
+	ScreenSrc[8].iImgW = g2_TextureWidth(ScreenSrc[8].nTx);
+	ScreenSrc[8].iImgH = g2_TextureHeight(ScreenSrc[8].nTx);
 
-	ScreenSrc[9].nTx = glc2d_TextureLoad("Texture/bg4.bmp");
-	ScreenSrc[9].iImgW = glc2d_TextureWidth(ScreenSrc[9].nTx);
-	ScreenSrc[9].iImgH = glc2d_TextureHeight(ScreenSrc[9].nTx);
+	ScreenSrc[9].nTx = g2_TextureLoad("Texture/bg4.bmp");
+	ScreenSrc[9].iImgW = g2_TextureWidth(ScreenSrc[9].nTx);
+	ScreenSrc[9].iImgH = g2_TextureHeight(ScreenSrc[9].nTx);
 
-	ScreenSrc[10].nTx = glc2d_TextureLoad("Texture/side1.bmp");
-	ScreenSrc[10].iImgW = glc2d_TextureWidth(ScreenSrc[10].nTx);
-	ScreenSrc[10].iImgH = glc2d_TextureHeight(ScreenSrc[10].nTx);
+	ScreenSrc[10].nTx = g2_TextureLoad("Texture/side1.bmp");
+	ScreenSrc[10].iImgW = g2_TextureWidth(ScreenSrc[10].nTx);
+	ScreenSrc[10].iImgH = g2_TextureHeight(ScreenSrc[10].nTx);
 
 	// 화면에 출력하기 위해서 함수를 연결한다.
-	glc2d_SetFrameMove(FrameMove);
-	glc2d_SetRender(Render);
+	g2_SetFrameMove(FrameMove);
+	g2_SetRender(Render);
 
 	g_BigenTime = timeGetTime();
 	g_EndTime = g_BigenTime;
 
-	glc2d_Run();
+	g2_Run();
 
 
-//	glc2d_TextureRelease(nTx);
+//	g2_TextureRelease(nTx);
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 
 	return 0;
@@ -122,7 +122,12 @@ int FrameMove()
 {
 	memcpy(g_Input.pKeyOld,   g_Input.pKeyNew,	sizeof g_Input.pKeyOld);
 	memset(g_Input.pKeyNew,					0,	sizeof g_Input.pKeyNew);
-	memcpy(g_Input.pKeyNew, glc2d_GetKeyboard(),sizeof g_Input.pKeyNew);
+	memcpy(g_Input.pKeyNew, g2_GetKeyboard(),sizeof g_Input.pKeyNew);
+
+	if(g_Input.pKeyNew[VK_MENU] == EINPUT_PRESS && g_Input.pKeyNew[VK_RETURN] == EINPUT_DOWN)
+	{
+		g2_ChangeWindow(!g2_GetWindowMode());
+	}
 
 	switch(g_GameState)
 	{

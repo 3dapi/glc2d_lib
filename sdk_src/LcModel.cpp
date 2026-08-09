@@ -13,7 +13,7 @@
 #include "ILcTexture.h"
 #include "ILcModel.h"
 
-namespace glc2d
+namespace glc
 {
 
 class CLcModel2D : public ILcModel
@@ -69,19 +69,15 @@ public:
 
 	typedef std::vector<ILcModel*>		lsModel;
 
-	static int			m_nIDModel;		// Model9 ID
-	static ILcSpriteX*	m_pSprite;
-	static lsModel*		m_vModel;
+	inline static int			m_nIDModel{};		// Model9 ID
+	inline static ILcSpriteX*	m_pLcSprite {};
+	inline static lsModel*		m_vModel  {};
 };
-
-int						CLcModel2D::m_nIDModel	= 0;		// Sound ID
-ILcSpriteX*				CLcModel2D::m_pSprite	= {};
-CLcModel2D::lsModel*	CLcModel2D::m_vModel	= {};
 
 
 int LcDev_ModelInit(void* pSprite)
 {
-	CLcModel2D::m_pSprite	= (ILcSpriteX*)pSprite;
+	CLcModel2D::m_pLcSprite	= (ILcSpriteX*)pSprite;
 	CLcModel2D::m_vModel	= new CLcModel2D::lsModel;
 
 	return 0;
@@ -263,9 +259,9 @@ void CLcModel2D::Render()
 {
 	auto pTex = (LPDIRECT3DTEXTURE9)m_AniTex->GetTexture();
 
-	m_pSprite->Begin();
-	m_pSprite->Draw(pTex, &m_ImgRc, NULL, &m_vcPos, m_dColor);
-	m_pSprite->End();
+	m_pLcSprite->Begin();
+	m_pLcSprite->Draw(pTex, &m_ImgRc, NULL, &m_vcPos, m_dColor);
+	m_pLcSprite->End();
 }
 
 ILcModel* LcDev_ModelFind(CSTR sFile)
@@ -306,5 +302,5 @@ int LcDev_ModelCreate(ILcModel** pData, void* p1, void* p2, void* p3, void* p4)
 }
 
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////

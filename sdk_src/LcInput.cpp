@@ -8,9 +8,9 @@
 #include <windows.h>
 #include "ILcInput.h"
 
-extern float glc2d_GetScnScale();
+extern float g2_GetScnScale();
 
-namespace glc2d
+namespace glc
 {
 
 class CLcInput : public ILcInput
@@ -193,7 +193,7 @@ int CLcInput::FrameMove()	// Mouse
 	::GetCursorPos(&pt);
 	::ScreenToClient(m_hWnd, &pt);
 
-	float scnScale = glc2d_GetScnScale();
+	float scnScale = g2_GetScnScale();
 	m_vcCur.x = float(pt.x)/scnScale;
 	m_vcCur.y = float(pt.y)/scnScale;;
 
@@ -351,5 +351,5 @@ int LcDev_InputCreate(ILcInput** pData, void* hWnd)
 	return 0;
 }
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////

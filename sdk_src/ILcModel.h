@@ -8,7 +8,7 @@
 #include "glcType.h"
 #include "glcInternal.h"
 
-namespace glc2d
+namespace glc
 {
 
 interface ILcModel
@@ -39,6 +39,6 @@ int			LcDev_ModelInit(void* pSprite);	// ID3DXSprite Pointer
 ILcModel*	LcDev_ModelFind(int nID);
 void		LcDev_ModelDestroy();
 
-}//namespace glc2d
+}//namespace glc
 
 #endif

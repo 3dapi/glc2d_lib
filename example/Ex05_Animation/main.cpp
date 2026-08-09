@@ -39,13 +39,13 @@ FLOAT	g_AniSpeed=120;		// Animation Speed
 int FrameMove()
 {
 	// Update the input
-	g_mouseX = glc2d_GetMouseX();
-	g_mouseY = glc2d_GetMouseY();
-	g_mouseZ = glc2d_GetMouseZ();
-	const KEYCODE* pKey = glc2d_GetKeyboard();
+	g_mouseX = g2_GetMouseX();
+	g_mouseY = g2_GetMouseY();
+	g_mouseZ = g2_GetMouseZ();
+	const KEYCODE* pKey = g2_GetKeyboard();
 
 	// Get the current time
-	DWORD currentTime = glc2d_TimeGetTime();
+	DWORD currentTime = g2_TimeGetTime();
 
 	// Update the frame index
 	int frameIndex = int(currentTime / g_AniSpeed);
@@ -64,34 +64,34 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 
-	glc2d_Draw2D(nTx1, &rt1);
-	//glc2d_Draw2D(g_AniTex, &g_AniRc, &VEC2(300, 300), &VEC2(2, 2));
+	g2_Draw2D(nTx1, &rt1);
+	//g2_Draw2D(g_AniTex, &g_AniRc, &VEC2(300, 300), &VEC2(2, 2));
 	VEC2	vcMouse = VEC2(g_mouseX, g_mouseY);
-	glc2d_Draw2D(g_AniTex, &g_AniRc, &vcMouse, &VEC2(2, 2));
+	g2_Draw2D(g_AniTex, &g_AniRc, &vcMouse, &VEC2(2, 2));
 
 	return 0;
 }
 
 int main()
 {
-	glc2d_InitSdk();
-	glc2d_SetClearColor(0xFF006699);
-	glc2d_SetRender(Render);
-	glc2d_SetFrameMove(FrameMove);
+	g2_InitSdk();
+	g2_SetClearColor(0xFF006699);
+	g2_SetRender(Render);
+	g2_SetFrameMove(FrameMove);
 
-	glc2d_CreateWin(100, 100, 800, 600, "McUtil Animation Test", false);
+	g2_CreateWin(100, 100, 800, 600, "McUtil Animation Test", false);
 
-	nTx1	= glc2d_TextureLoad("Texture/lena.png");
-	iImgW1	= glc2d_TextureWidth(nTx1);
-	iImgH1	= glc2d_TextureHeight(nTx1);
+	nTx1	= g2_TextureLoad("Texture/lena.png");
+	iImgW1	= g2_TextureWidth(nTx1);
+	iImgH1	= g2_TextureHeight(nTx1);
 
-	g_AniTex = glc2d_TextureLoad("Texture/mario.png");
-	g_AniImgW= glc2d_TextureWidth(g_AniTex);
-	g_AniImgH= glc2d_TextureHeight(g_AniTex);
+	g_AniTex = g2_TextureLoad("Texture/mario.png");
+	g_AniImgW= g2_TextureWidth(g_AniTex);
+	g_AniImgH= g2_TextureHeight(g_AniTex);
 
-	glc2d_Run();
+	g2_Run();
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }

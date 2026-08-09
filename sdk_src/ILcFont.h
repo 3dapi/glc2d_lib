@@ -8,7 +8,7 @@
 #include "glcType.h"
 #include "glcInternal.h"
 
-namespace glc2d
+namespace glc
 {
 
 interface	ILcFont
@@ -28,13 +28,13 @@ int LcDev_FontCreate(ILcFont** pData
 					, void* p4={}
 					);
 
-int			LcDev_FontInit(void* pd3dDevice);
+int			LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pTm);
 ILcFont*	LcDev_FontFind(int _nID);
 void		LcDev_FontDestroy();
 int			LcDev_FontOnLostDevice();
 int			LcDev_FontOnResetDevice();
 
-}//namespace glc2d
+}//namespace glc
 
 #endif
 

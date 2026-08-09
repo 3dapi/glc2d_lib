@@ -24,21 +24,21 @@ int		nTx;
 int Render()
 {
 	RECT	rt1 = {0,0,iImgW, iImgH};
-	glc2d_Draw2D(nTx, &rt1);
+	g2_Draw2D(nTx, &rt1);
 
 	return 0;
 }
 
 int FrameMove()
 {
-	glc2d_SetWindowTitle("Change Window Mode. Try to Press Space Bar");
+	g2_SetWindowTitle("Change Window Mode. Try to Press Space Bar");
 
-	int mouseX = glc2d_GetMouseX();
-	int mouseY = glc2d_GetMouseY();
-	int mouseZ = glc2d_GetMouseZ();
+	int mouseX = g2_GetMouseX();
+	int mouseY = g2_GetMouseY();
+	int mouseZ = g2_GetMouseZ();
 
 	// keyboard 포인터.
-	const KEYCODE* pKeyboard = glc2d_GetKeyboard();
+	const KEYCODE* pKeyboard = g2_GetKeyboard();
 	for(int i=9; i<128; ++i)
 	{
 		if( pKeyboard[i])
@@ -51,22 +51,22 @@ int FrameMove()
 
 int main()
 {
-	glc2d_InitSdk();
+	g2_InitSdk();
 
-	glc2d_SetClearColor(0xFF006699);
+	g2_SetClearColor(0xFF006699);
 
-	glc2d_SetRender(Render);
-	glc2d_SetFrameMove(FrameMove);
+	g2_SetRender(Render);
+	g2_SetFrameMove(FrameMove);
 
-	glc2d_CreateWin(100, 100, 800, 600, "McUtil Keyboard Test");
+	g2_CreateWin(100, 100, 800, 600, "McUtil Keyboard Test");
 
-	nTx = glc2d_TextureLoad("Texture/lena.png");
-	iImgW = glc2d_TextureWidth(nTx);
-	iImgH = glc2d_TextureHeight(nTx);
+	nTx = g2_TextureLoad("Texture/lena.png");
+	iImgW = g2_TextureWidth(nTx);
+	iImgH = g2_TextureHeight(nTx);
 
-	glc2d_Run();
+	g2_Run();
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }

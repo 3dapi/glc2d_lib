@@ -50,9 +50,9 @@ int Render()
 	g_fRadius += g_dRadius;
 
 	// Draw Object
-	glc2d_DrawAlphaOption(1);
-	glc2d_Draw2D(nTx, NULL, &g_vcPos);
-	glc2d_DrawAlphaOption(0);
+	g2_DrawAlphaOption(1);
+	g2_Draw2D(nTx, NULL, &g_vcPos);
+	g2_DrawAlphaOption(0);
 
 	return 0;
 }
@@ -60,32 +60,32 @@ int Render()
 
 int main()
 {
-	glc2d_InitSdk();
+	g2_InitSdk();
 	printf("그림 올리기.......................\n\n");
 
 	//배경색을 바꾼다.
-	glc2d_SetClearColor(0xFF336699);
+	g2_SetClearColor(0xFF336699);
 
 	// 화면에 출력하기 위해서 함수를 연결한다.
-	glc2d_SetRender(Render);
+	g2_SetRender(Render);
 
 	// window 생성.
-	glc2d_CreateWin(100, 100, 800, 600, "My First Game Window");
+	g2_CreateWin(100, 100, 800, 600, "My First Game Window");
 
 
 	// 그림을 프로그램에 로딩
-	nTx = glc2d_TextureLoad("Texture/tst.png");
+	nTx = g2_TextureLoad("Texture/tst.png");
 
 
 	// 실행
-	glc2d_Run();
+	g2_Run();
 
 
 	// 텍스처 해제
-	glc2d_TextureRelease(nTx);
+	g2_TextureRelease(nTx);
 
 	// 윈도우 해제
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }

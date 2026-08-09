@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>glc2d</id>
-    <version>0.1.0.3</version>
+    <version>0.1.0.4</version>
     <authors>HeesungOh</authors>
     <description>GalicStudio Simple 2D graphics library for Visual C++</description>
     <license type="expression">MIT</license>

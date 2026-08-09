@@ -11,7 +11,7 @@
 #include "DsUtil.h"
 #include "ILcSound.h"
 
-namespace glc2d
+namespace glc
 {
 
 class CLcSound : public ILcSound
@@ -34,16 +34,11 @@ public:
 	int		Reset() override;
 	int		GetState() override;
 
-
-	static int				m_nIDSound	;		// Sound ID
-	static HWND				m_hWnd		;		// Window Handle
-	static CSoundManager*	m_pSndMn	;		//	Sound Manager
+	inline static int				m_nIDSound	{};		// Sound ID
+	inline static HWND				m_hWnd		{};		// Window Handle
+	inline static CSoundManager*	m_pSndMn	{};		//	Sound Manager
 };
 
-
-int				CLcSound::m_nIDSound= {};		// Sound ID
-HWND			CLcSound::m_hWnd	= {};		// Window Handle
-CSoundManager*	CLcSound::m_pSndMn	= {};		//	Sound Manager
 
 typedef std::vector<ILcSound* >	lsLcSound;
 static lsLcSound	m_vSound			;		// Sound List
@@ -168,7 +163,7 @@ int LcDev_SoundInit(void* hWnd)
 
 void LcDev_SoundDestroy()
 {
-	size_t iSize = glc2d::m_vSound.size();
+	size_t iSize = glc::m_vSound.size();
 	for(size_t i=0; i<iSize; ++i)
 	{
 		SAFE_DELETE( m_vSound[i]	);
@@ -185,70 +180,70 @@ ILcSound* LcDev_SoundFind(int _nID)
 }
 
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int glc2d_SoundLoad(CSTR sFileName)
+int g2_SoundLoad(CSTR sFileName)
 {
-	glc2d::ILcSound*	pSound = {};
-	if(FAILED(glc2d::LcDev_SoundCreate(&pSound, (VPTR)sFileName)))
+	glc::ILcSound*	pSound = {};
+	if(FAILED(glc::LcDev_SoundCreate(&pSound, (VPTR)sFileName)))
 		return -1;
 
-	glc2d::m_vSound.push_back(pSound);
+	glc::m_vSound.push_back(pSound);
 	// ID를 돌려 준다.
 	return pSound->GetID();
 }
 
 
-int glc2d_SoundRelease(int _nID)
+int g2_SoundRelease(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+	auto itr = std::find_if(glc::m_vSound.begin(), glc::m_vSound.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	if(itr == glc2d::m_vSound.end())
+	if(itr == glc::m_vSound.end())
 		return -1;
 
-	glc2d::m_vSound.erase(itr);
-	return static_cast<int>(glc2d::m_vSound.size());
+	glc::m_vSound.erase(itr);
+	return static_cast<int>(glc::m_vSound.size());
 }
 
-void glc2d_SoundPlay(int _nID)
+void g2_SoundPlay(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+	auto itr = std::find_if(glc::m_vSound.begin(), glc::m_vSound.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
 	
-	if(itr == glc2d::m_vSound.end())
+	if(itr == glc::m_vSound.end())
 		return;
 	(*itr)->Play();
 }
 
-void glc2d_SoundStop(int _nID)
+void g2_SoundStop(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+	auto itr = std::find_if(glc::m_vSound.begin(), glc::m_vSound.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
 	
-	if(itr == glc2d::m_vSound.end())
+	if(itr == glc::m_vSound.end())
 		return;
 	(*itr)->Stop();
 }
 
-void glc2d_SoundReset(int _nID)
+void g2_SoundReset(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+	auto itr = std::find_if(glc::m_vSound.begin(), glc::m_vSound.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	if(itr == glc2d::m_vSound.end())
+	if(itr == glc::m_vSound.end())
 		return;
 	(*itr)->Reset();
 }
 
-bool glc2d_SoundIsPlaying(int _nID)
+bool g2_SoundIsPlaying(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vSound.begin(), glc2d::m_vSound.end()
+	auto itr = std::find_if(glc::m_vSound.begin(), glc::m_vSound.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
 
-	if(itr == glc2d::m_vSound.end())
+	if(itr == glc::m_vSound.end())
 		return {};
 	auto ret = (*itr)->GetState();
 	return ret;

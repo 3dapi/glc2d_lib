@@ -8,7 +8,7 @@
 #include "glcType.h"
 #include "glcInternal.h"
 
-namespace glc2d
+namespace glc
 {
 
 interface ILcInput
@@ -49,7 +49,7 @@ interface ILcInput
 
 int LcDev_InputCreate(ILcInput** pData, void* hWnd);
 
-}//namespace glc2d
+}//namespace glc
 
 #endif
 

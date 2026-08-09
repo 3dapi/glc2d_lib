@@ -6,10 +6,11 @@
 #include <string>
 #include <windows.h>
 #include <d3d9.h>
+#include <d3dx9.h>
 
 #include "ILcFont.h"
 
-namespace glc2d
+namespace glc
 {
 
 class CLcFont : public ILcFont
@@ -31,16 +32,14 @@ public:
 	int		OnLostDevice() override;
 	int		OnResetDevice() override;
 
-	static int					m_nIDFnt;		// Font ID
-	static LPDIRECT3DDEVICE9	m_pDevice;		// Window Handle
+	inline static int				m_nIDFnt    {};		// Font ID
+	inline static LPDIRECT3DDEVICE9	m_pDevice   {};		// D3DDevice
+	inline static LPD3DXSPRITE		m_pLcSprite {};		// DXSprite
+	inline static D3DXMATRIX		m_tm        {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1, };
 };
-
-int					CLcFont::m_nIDFnt	= {};		// Font ID
-LPDIRECT3DDEVICE9	CLcFont::m_pDevice	= {};		// Direct3D Device
 
 typedef std::vector<ILcFont* >	lsLcFont;
 static lsLcFont	m_vFont;		// Font List
-
 
 CLcFont::CLcFont()
 {
@@ -90,12 +89,11 @@ int CLcFont::Create(void* p1,void* p2,void* p3,void* p4)
 	D3DXFONT_DESC hFont =
 	{
 		iH, 0
-			, FW_NORMAL, 1
+			, FW_EXTRABOLD, 1
 			, iItalic
 			, HANGUL_CHARSET, OUT_DEFAULT_PRECIS
 			, ANTIALIASED_QUALITY, FF_DONTCARE, "Arial"
 	};
-
 	strcpy(hFont.FaceName, sName);
 
 
@@ -147,9 +145,15 @@ int LcDev_FontCreate(ILcFont** pData
 	return 0;
 }
 
-int LcDev_FontInit(void* pDev)
+int LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pTm)
 {
-	CLcFont::m_pDevice	= (LPDIRECT3DDEVICE9)pDev;
+	CLcFont::m_pDevice	 = (LPDIRECT3DDEVICE9)pd3dDevice;
+	CLcFont::m_pLcSprite = (LPD3DXSPRITE)pd3dSprite;
+	D3DXMATRIX* tm       = (D3DXMATRIX*)pTm;
+	if(!pd3dDevice || !pd3dSprite || !tm)
+		return -1;
+
+	CLcFont::m_tm = *tm;
 	return 0;
 }
 
@@ -190,33 +194,33 @@ int LcDev_FontOnResetDevice()
 	return S_OK;
 }
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
-int glc2d_FontCreate(CSTR sName, long iH, long iItalic)
+int g2_FontCreate(CSTR sName, long iH, long iItalic)
 {
-	glc2d::ILcFont* pFont	{};
-	if(FAILED(glc2d::LcDev_FontCreate(&pFont, (VPTR)sName, &iH, &iItalic)))
+	glc::ILcFont* pFont	{};
+	if(FAILED(glc::LcDev_FontCreate(&pFont, (VPTR)sName, &iH, &iItalic)))
 		return -1;
 
-	glc2d::m_vFont.push_back(pFont);
+	glc::m_vFont.push_back(pFont);
 	return pFont->GetID();
 }
 
-int glc2d_FontDrawText(int nIdx
-					   , long lLeft
-					   , long lTop
-					   , long lRight
-					   , long lBottom
-					   , DWORD fontColor
-					   , const char *format, ...)
+int g2_FontDrawText(const int nIdx
+					, const long lLeft
+					, const long lTop
+					, const long lRight
+					, const long lBottom
+					, const DWORD fontColor
+					, const char *format, ...)
 {
-	glc2d::ILcFont* pFont	{};
+	glc::ILcFont* pFont	{};
 	ID3DXFont*	pDxFnt		{};
 
-	pFont = glc2d::LcDev_FontFind(nIdx);
+	pFont = glc::LcDev_FontFind(nIdx);
 	if(!pFont)
 		return -1;
 
@@ -246,13 +250,21 @@ int glc2d_FontDrawText(int nIdx
     rc.right	= lRight+20;
 	rc.bottom	= lBottom;
 
-    return pDxFnt->DrawText(NULL, s.c_str(), -1, &rc, 0, fontColor );
+	auto sprite = glc::CLcFont::m_pLcSprite;
+	if(sprite)
+		sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	sprite->SetTransform(&glc::CLcFont::m_tm);
+	int hr = pDxFnt->DrawText(sprite, s.c_str(), -1, &rc, 0, fontColor);
+	if(sprite)
+		sprite->End();
+
+	return hr;
 }
 
-//int glc2d_FontRelease(int _nID)
+//int g2_FontRelease(int _nID)
 //{
-//	auto itr = glc2d::m_vFont.end();
-//	for(auto it = glc2d::m_vFont.begin(); it != glc2d::m_vFont.end(); ++it)
+//	auto itr = glc::m_vFont.end();
+//	for(auto it = glc::m_vFont.begin(); it != glc::m_vFont.end(); ++it)
 //	{
 //		if((*it)->GetID() == _nID)
 //		{
@@ -260,24 +272,24 @@ int glc2d_FontDrawText(int nIdx
 //			break;
 //		}
 //	}
-//	if(itr == glc2d::m_vFont.end())
+//	if(itr == glc::m_vFont.end())
 //		return -1;
 //
 //	SAFE_DELETE(*itr);
-//	glc2d::m_vFont.erase(itr);
-//	return static_cast<int>(glc2d::m_vFont.size());
+//	glc::m_vFont.erase(itr);
+//	return static_cast<int>(glc::m_vFont.size());
 //}
 
-int glc2d_FontRelease(int _nID)
+int g2_FontRelease(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vFont.begin(), glc2d::m_vFont.end()
+	auto itr = std::find_if(glc::m_vFont.begin(), glc::m_vFont.end()
 	, [_nID](const auto& p){ return p ->GetID() == _nID;});
-	if(itr == glc2d::m_vFont.end())
+	if(itr == glc::m_vFont.end())
 	{
 		return -1;
 	}
 	SAFE_DELETE(*itr);
-	glc2d::m_vFont.erase(itr);
-	return static_cast<int>(glc2d::m_vFont.size());
+	glc::m_vFont.erase(itr);
+	return static_cast<int>(glc::m_vFont.size());
 }
 

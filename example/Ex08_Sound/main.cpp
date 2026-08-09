@@ -42,23 +42,23 @@ int		nSound2;
 
 int main()
 {
-	glc2d_InitSdk();
-	glc2d_SetClearColor(0xFF006699);
-	glc2d_SetRender(Render);
-	glc2d_SetFrameMove(FrameMove);
+	g2_InitSdk();
+	g2_SetClearColor(0xFF006699);
+	g2_SetRender(Render);
+	g2_SetFrameMove(FrameMove);
 
-	glc2d_CreateWin(100, 100, 800, 600, "Sound");
-	nTx1	= glc2d_TextureLoad("Texture/lena.png");
-	iImgW1	= glc2d_TextureWidth(nTx1);
-	iImgH1	= glc2d_TextureHeight(nTx1);
+	g2_CreateWin(100, 100, 800, 600, "Sound");
+	nTx1	= g2_TextureLoad("Texture/lena.png");
+	iImgW1	= g2_TextureWidth(nTx1);
+	iImgH1	= g2_TextureHeight(nTx1);
 
-	nFont1 = glc2d_FontCreate("Arial", 30, 0);
-	nSound1 = glc2d_SoundLoad("sound/bounce.wav");
-	nSound2 = glc2d_SoundLoad("sound/move3.wav");
+	nFont1 = g2_FontCreate("Arial", 30, 0);
+	nSound1 = g2_SoundLoad("sound/bounce.wav");
+	nSound2 = g2_SoundLoad("sound/move3.wav");
 
-	glc2d_Run();
+	g2_Run();
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }
@@ -66,23 +66,23 @@ int main()
 
 int FrameMove()
 {
-	mouseX = glc2d_GetMouseX();
-	mouseY = glc2d_GetMouseY();
-	mouseZ = glc2d_GetMouseZ();
+	mouseX = g2_GetMouseX();
+	mouseY = g2_GetMouseY();
+	mouseZ = g2_GetMouseZ();
 
-	pKey = glc2d_GetKeyboard();
+	pKey = g2_GetKeyboard();
 
 
-	if(pKey[VK_LEFT] && !glc2d_SoundIsPlaying(nSound1))
+	if(pKey[VK_LEFT] && !g2_SoundIsPlaying(nSound1))
 	{
-		glc2d_SoundReset(nSound1);
-		glc2d_SoundPlay(nSound1);
+		g2_SoundReset(nSound1);
+		g2_SoundPlay(nSound1);
 	}
 
-	if(pKey[VK_RIGHT] && !glc2d_SoundIsPlaying(nSound2))
+	if(pKey[VK_RIGHT] && !g2_SoundIsPlaying(nSound2))
 	{
-		glc2d_SoundReset(nSound2);
-		glc2d_SoundPlay(nSound2);
+		g2_SoundReset(nSound2);
+		g2_SoundPlay(nSound2);
 	}
 
 
@@ -93,10 +93,10 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 
-	glc2d_Draw2D(nTx1, &rt1);
+	g2_Draw2D(nTx1, &rt1);
 
 
-	int c= glc2d_FontDrawText(nFont1, 20, 300, 500, 340
+	int c= g2_FontDrawText(nFont1, 20, 300, 500, 340
 			, 0xffFFAA44, "Tri to Press Left or Right Key");
 
 

@@ -10,9 +10,9 @@
 
 typedef LPDIRECT3DTEXTURE9	DXTEX;
 
-extern float glc2d_GetScnScale();
+extern float g2_GetScnScale();
 
-namespace glc2d
+namespace glc
 {
 
 class CLcSpriteX : public ILcSpriteX
@@ -51,40 +51,40 @@ public:
 	virtual int		Create(void* =0, void* =0, void* =0, void* =0);
 	virtual void	Destroy();
 
-	virtual	int		Begin(DWORD=0);
-	virtual	int		End(DWORD=0);
+	int		Begin(DWORD=0) override;
+	int		End(DWORD=0) override;
 
-	virtual	int		OnResetDevice();
-	virtual	int		OnLostDevice();
+	int		OnResetDevice() override;
+	int		OnLostDevice() override;
 
-	virtual	int		Draw( void* pTex				// Texture
-						, RECT* pRct				// Draw Region
-						, void* pScl=NULL			// Scaling
-						, void* pTrn=NULL			// Position
-						, DWORD dColor=0xFFFFFFFF	// color
-						, int   bMono=0				// Monotone
-						);
+	int		Draw( const void* pTex				// Texture
+				, const RECT* pRct				// Draw Region
+				, const void* pScl=NULL			// Scaling
+				, const void* pTrn=NULL			// Position
+				, const DWORD dColor=0xFFFFFFFF	// color
+				, const int   bMono=0			// Monotone
+				) override;
 
-	virtual	int		DrawEx( void* pTex				// Texture
-						, RECT* pRct				// Draw Region
-						, void* pScl				// Scaling
-						, void* pTrn				// Position
-						, void* pRot				// Rotation Center
-						, float	fAngle				// Rotation Angle(Radian)
-						, DWORD dColor=0xFFFFFFFF	// color
-						, int   bMono=0				// Monotone
-						);
+	int		DrawEx(const void* pTex				// Texture
+				, const RECT* pRct				// Draw Region
+				, const void* pScl				// Scaling
+				, const void* pTrn				// Position
+				, const void* pRot				// Rotation Center
+				, const float	fAngle				// Rotation Angle(Radian)
+				, const DWORD dColor=0xFFFFFFFF	// color
+				, const int   bMono=0				// Monotone
+				) override;
 
-	virtual	void	AlphaOption(int opt=0);
+	void	AlphaOption(int opt=0) override;
 protected:
-	int		DrawExt(	void* pTex
-						, RECT* pRct
-						, VEC2* pScl
-						, VEC2* pRot
-						, float fRot
-						, VEC2* pTrn
-						, DWORD dColor
-						, int bMono);
+	int		DrawExt(const void* pTex
+					, const RECT* pRct
+					, const VEC2* pScl
+					, const VEC2* pRot
+					, const float fRot
+					, const VEC2* pTrn
+					, const DWORD dColor
+					, const int bMono);
 };
 
 CLcSpriteX::CLcSpriteX()
@@ -205,38 +205,38 @@ int CLcSpriteX::OnLostDevice()
 	return hr;
 }
 
-int CLcSpriteX::Draw(void* pTex				// Texture
-					, RECT* pRct			// Draw Region
-					, void* pScl			// Scaling
-					, void* pTrn			// Position
-					, DWORD dColor			// color
-					, int   bMono			// Monotone
+int CLcSpriteX::Draw(const void* pTex		// Texture
+					, const RECT* pRct		// Draw Region
+					, const void* pScl		// Scaling
+					, const void* pTrn		// Position
+					, const DWORD dColor	// color
+					, const int   bMono		// Monotone
 					)
 {
-	return DrawExt(pTex, pRct, (VEC2*)pScl, NULL, 0, (VEC2*)pTrn, dColor, bMono);
+	return DrawExt(pTex, pRct, (VEC2*)pScl, {}, 0, (VEC2*)pTrn, dColor, bMono);
 }
 
-int CLcSpriteX::DrawEx( void* pTex			// Texture
-						, RECT* pRct		// Draw Region
-						, void* pScl		// Scaling
-						, void* pTrn		// Position
-						, void* pRot		// Rotation Center
-						, float	fAngle		// Rotation Angle(Radian)
-						, DWORD dColor		// color
-						, int   bMono		// Monotone
-						)
+int CLcSpriteX::DrawEx(const void* pTex		// Texture
+					, const RECT* pRct		// Draw Region
+					, const void* pScl		// Scaling
+					, const void* pTrn		// Position
+					, const void* pRot		// Rotation Center
+					, const float fAngle	// Rotation Angle(Radian)
+					, const DWORD dColor	// color
+					, const int   bMono		// Monotone
+					)
 {
 	return DrawExt(pTex, pRct, (VEC2*)pScl, (VEC2*)pRot, fAngle, (VEC2*)pTrn, dColor, bMono);
 }
 
-int CLcSpriteX::DrawExt(  void* pTex
-						, RECT* pRct
-						, VEC2* pScl
-						, VEC2* pRot
-						, float fRot
-						, VEC2* pTrn
-						, DWORD dColor
-						, int bMono)
+int CLcSpriteX::DrawExt(const void* pTex
+						, const RECT* pRct
+						, const VEC2* pScl
+						, const VEC2* pRot
+						, const float fRot
+						, const VEC2* pTrn
+						, const DWORD dColor
+						, const int bMono)
 {
 	HRESULT hr=0;
 
@@ -273,8 +273,6 @@ int CLcSpriteX::DrawExt(  void* pTex
 
 	// 1. 입력 값 복사
 	dDiff = dColor;
-	bMono = bMono;
-
 
 	// 1.1 이미지 소스 1 영역 복사
 	if(pRct)
@@ -339,7 +337,7 @@ int CLcSpriteX::DrawExt(  void* pTex
 	}
 
 	// 정점 설정
-	float scnScale = glc2d_GetScnScale();
+	float scnScale = g2_GetScnScale();
 	m_pVtx[0].p = VEC2(PosL, PosT) * scnScale;
 	m_pVtx[1].p = VEC2(PosR, PosT) * scnScale;
 	m_pVtx[2].p = VEC2(PosR, PosB) * scnScale;
@@ -450,5 +448,5 @@ int LcDev_SpriteCreate(ILcSpriteX** pData
 	return 0;
 }
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////

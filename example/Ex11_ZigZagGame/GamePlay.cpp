@@ -66,7 +66,7 @@ int GameGetScreenHeight(void)
 
 int GameInit(void)
 {
-	m_pTx[0]	= glc2d_TextureLoad("Texture/img1.bmp", 0xFF000000);
+	m_pTx[0]	= g2_TextureLoad("Texture/img1.bmp", 0xFF000000);
 	memset(m_keyboardOld, 0, sizeof(m_keyboardOld));
 	memset(m_keyboardCur, 0, sizeof(m_keyboardCur));
 
@@ -74,16 +74,16 @@ int GameInit(void)
 	ImgArrayInit();
 
 
-	nFont1 = glc2d_FontCreate("Arial", 50, 0);
+	nFont1 = g2_FontCreate("Arial", 50, 0);
 
 	//배경 음악
-	nSound[0] = glc2d_SoundLoad("sound/trample.wav");
+	nSound[0] = g2_SoundLoad("sound/trample.wav");
 
 	//Key board Event
-	nSound[1] = glc2d_SoundLoad("sound/move3.wav");
+	nSound[1] = g2_SoundLoad("sound/move3.wav");
 
 	g_GamePhase = GAME_PLAY;
-//	glc2d_SoundPlay(nSound[0]);
+//	g2_SoundPlay(nSound[0]);
 	return 0;
 }
 
@@ -97,9 +97,9 @@ int GameDestroy(void)
 
 int GamePlay(void)
 {
-	m_mousePos = glc2d_GetMouse();												// 마우스 위치 X,Y,Z
+	m_mousePos = g2_GetMouse();												// 마우스 위치 X,Y,Z
 	memcpy(m_keyboardOld, m_keyboardCur, sizeof(m_keyboardCur));				// 키보드 상태를 Old에 저장
-	memcpy(m_keyboardCur, glc2d_GetKeyboard(), sizeof(m_keyboardCur));			// 키보드 상태를 Current에 저장
+	memcpy(m_keyboardCur, g2_GetKeyboard(), sizeof(m_keyboardCur));			// 키보드 상태를 Current에 저장
 
 	int	nCntSuccess=0;
 	
@@ -143,9 +143,9 @@ int GamePlay(void)
 			++m_iCntKey;
 		}
 
-		glc2d_SoundStop(nSound[1]);
-		glc2d_SoundReset(nSound[1]);
-		glc2d_SoundPlay(nSound[1]);
+		g2_SoundStop(nSound[1]);
+		g2_SoundReset(nSound[1]);
+		g2_SoundPlay(nSound[1]);
 	}
 
 	// 좌측 이동...
@@ -165,9 +165,9 @@ int GamePlay(void)
 			++m_iCntKey;
 		}
 
-		glc2d_SoundStop(nSound[1]);
-		glc2d_SoundReset(nSound[1]);
-		glc2d_SoundPlay(nSound[1]);
+		g2_SoundStop(nSound[1]);
+		g2_SoundReset(nSound[1]);
+		g2_SoundPlay(nSound[1]);
 	}
 
 	// 하측 이동...
@@ -187,9 +187,9 @@ int GamePlay(void)
 			++m_iCntKey;
 		}
 
-		glc2d_SoundStop(nSound[1]);
-		glc2d_SoundReset(nSound[1]);
-		glc2d_SoundPlay(nSound[1]);
+		g2_SoundStop(nSound[1]);
+		g2_SoundReset(nSound[1]);
+		g2_SoundPlay(nSound[1]);
 	}
 
 	// 상측 이동...
@@ -208,9 +208,9 @@ int GamePlay(void)
 			++m_nBlankI;
 		}
 
-		glc2d_SoundStop(nSound[1]);
-		glc2d_SoundReset(nSound[1]);
-		glc2d_SoundPlay(nSound[1]);
+		g2_SoundStop(nSound[1]);
+		g2_SoundReset(nSound[1]);
+		g2_SoundPlay(nSound[1]);
 	}
 
 
@@ -234,7 +234,7 @@ int GamePlay(void)
 		m_bSuccess	= true;
 
 
-		glc2d_SoundStop(nSound[0]);
+		g2_SoundStop(nSound[0]);
 	}
 
 	return 0;
@@ -253,7 +253,7 @@ int GameRender(void)
 			{
 				if( m_pMapImg[i][j].nIdx != m_iNumMap )
 				{
-					glc2d_Draw2D(m_pTx[m_nImg]
+					g2_Draw2D(m_pTx[m_nImg]
 								, &m_pMapBit[ m_pMapImg[i][j].nIdx ].rc
 								, &m_pMapImg[i][j].pos);
 				}
@@ -264,9 +264,9 @@ int GameRender(void)
 	else
 	{
 		RECT rc={0,0, (LONG)m_screenW, (LONG)m_screenH};
-		glc2d_Draw2D(m_pTx[m_nImg], &rc);
+		g2_Draw2D(m_pTx[m_nImg], &rc);
 
-		int c= glc2d_FontDrawText(nFont1, 200, 300, 500, 340, 0xffFFBB77, "추카추가 !!!");
+		int c= g2_FontDrawText(nFont1, 200, 300, 500, 340, 0xffFFBB77, "추카추가 !!!");
 	}
 
 	return 0;

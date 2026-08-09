@@ -39,41 +39,45 @@ const KEYCODE*	pKey;
 
 int main()
 {
-	glc2d_InitSdk();
-	glc2d_SetClearColor(0xFF006699);
+	g2_InitSdk();
+	g2_SetClearColor(0xFF006699);
 	// 아이콘 설정.
-	glc2d_SetWindowIcon(IDI_MAIN_ICON);
+	g2_SetWindowIcon(IDI_MAIN_ICON);
 
-	glc2d_SetRender(Render);
-	glc2d_SetFrameMove(FrameMove);
+	g2_SetRender(Render);
+	g2_SetFrameMove(FrameMove);
 
-	glc2d_CreateWin(100, 100, 800, 600, "Resource", false);
+	g2_CreateWin(100, 100, 800, 600, "Resource", false);
 
-	nTx1	= glc2d_TextureLoad("Texture/lena.png");
-	iImgW1	= glc2d_TextureWidth(nTx1);
-	iImgH1	= glc2d_TextureHeight(nTx1);
+	nTx1	= g2_TextureLoad("Texture/lena.png");
+	iImgW1	= g2_TextureWidth(nTx1);
+	iImgH1	= g2_TextureHeight(nTx1);
 
-	nFont1 = glc2d_FontCreate("굴림", 20, 0);
-	nFont2 = glc2d_FontCreate("Arial", 25, 1);
-	nFont3 = glc2d_FontCreate("궁서", 20, 1);
+	nFont1 = g2_FontCreate("굴림", 20, 0);
+	nFont2 = g2_FontCreate("Arial", 25, 1);
+	nFont3 = g2_FontCreate("궁서", 20, 1);
 
-	glc2d_Run();
+	g2_Run();
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }
 
 int FrameMove()
 {
-	mouseX = glc2d_GetMouseX();
-	mouseY = glc2d_GetMouseY();
-	mouseZ = glc2d_GetMouseZ();
+	mouseX = g2_GetMouseX();
+	mouseY = g2_GetMouseY();
+	mouseZ = g2_GetMouseZ();
 
-	pKey = glc2d_GetKeyboard();
+	pKey = g2_GetKeyboard();
 	if(pKey[VK_SPACE])
 	{
-		glc2d_ChangeWindow(true);
+		g2_ChangeWindow(true);
+	}
+	if(pKey[VK_RCONTROL])
+	{
+		g2_ChangeWindow(false);
 	}
 
 	return 0;
@@ -83,13 +87,13 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 
-	glc2d_Draw2D(nTx1, &rt1);
+	g2_Draw2D(nTx1, &rt1);
 
-	glc2d_FontDrawText(nFont2, 10, 10, 500, 40, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
+	g2_FontDrawText(nFont2, 10, 10, 500, 40, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
 
-	if( glc2d_GetMouseEvent(1))		// R button
+	if( g2_GetMouseEvent(1))		// R button
 	{
-		int c= glc2d_FontDrawText(nFont3, mouseX, mouseY, mouseX+500, mouseY+ 40
+		int c= g2_FontDrawText(nFont3, mouseX, mouseY, mouseX+500, mouseY+ 40
 			, 0xFF99AAFF
 			, "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
 	}

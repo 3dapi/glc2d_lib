@@ -8,7 +8,7 @@
 #include "glcType.h"
 #include "glcInternal.h"
 
-namespace glc2d
+namespace glc
 {
 
 interface	ILcTexture
@@ -37,6 +37,6 @@ int			LcDev_TextureInit(void* pd3dDevice);
 ILcTexture*	LcDev_TextureFind(int nID);
 void		LcDev_TextureDestroy();
 
-}//namespace glc2d
+}//namespace glc
 
 #endif

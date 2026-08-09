@@ -29,7 +29,7 @@ int Render()
 	// 이미지 위치를 마우스 위치로 설정한다.
 	VEC2	vcPos(mouseX, mouseY);
 
-	glc2d_Draw2D(nTx, NULL, &vcPos);
+	g2_Draw2D(nTx, NULL, &vcPos);
 
 	return 0;
 }
@@ -38,12 +38,12 @@ int Render()
 int FrameMove()
 {
 	// 마우스 위치 읽기
-	mouseX = glc2d_GetMouseX();
-	mouseY = glc2d_GetMouseY();
-	mouseZ = glc2d_GetMouseZ();
+	mouseX = g2_GetMouseX();
+	mouseY = g2_GetMouseY();
+	mouseZ = g2_GetMouseZ();
 
 	// 윈도우 타이틀 영역에 마우스 위치 출력
-	glc2d_SetWindowTitle("%d %d %d", mouseX, mouseY, mouseZ);
+	g2_SetWindowTitle("%d %d %d", mouseX, mouseY, mouseZ);
 
 	return 0;
 }
@@ -51,25 +51,25 @@ int FrameMove()
 
 int main()
 {
-	glc2d_InitSdk();
+	g2_InitSdk();
 
 	// 화면에 출력하기 위해서 출력 함수를 연결한다.
-	glc2d_SetRender(Render);
+	g2_SetRender(Render);
 
 	// 데이터 갱신을 위한 함수를 연결한다.
-	glc2d_SetFrameMove(FrameMove);
+	g2_SetFrameMove(FrameMove);
 
 	// 윈도우 생성
-	glc2d_CreateWin(100, 100, 800, 600, "My First Game Window");
+	g2_CreateWin(100, 100, 800, 600, "My First Game Window");
 
 	// 텍스처 로드
-	nTx = glc2d_TextureLoad("Texture/lena.png");
+	nTx = g2_TextureLoad("Texture/lena.png");
 
 	// 실행
-	glc2d_Run();
+	g2_Run();
 
 	// 윈도우 해제
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 
 	return 0;
 }

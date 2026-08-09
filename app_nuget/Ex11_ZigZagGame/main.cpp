@@ -20,25 +20,25 @@
 
 int main()
 {
-	glc2d_InitSdk();
+	g2_InitSdk();
 
 	int scnW = GameGetScreenWidth();
 	int scnH = GameGetScreenHeight();
 
-	glc2d_SetClearColor(0xFF000000);
-	glc2d_SetStateShow(false);
-	glc2d_SetWindowIcon(IDI_MAIN_ICON);
+	g2_SetClearColor(0xFF000000);
+	g2_SetStateShow(false);
+	g2_SetWindowIcon(IDI_MAIN_ICON);
 
-	glc2d_SetRender(GameRender);
-	glc2d_SetFrameMove(GameFrameMove);
+	g2_SetRender(GameRender);
+	g2_SetFrameMove(GameFrameMove);
 
-	glc2d_CreateWin(0, 0, scnW, scnH, "Simple zigzag 게임", true, 960.0F/scnH);
+	g2_CreateWin(0, 0, scnW, scnH, "Simple zigzag 게임", true, 960.0F/scnH);
 
 	GameInit();
 
-	glc2d_Run();
+	g2_Run();
 	GameDestroy();
 
-	glc2d_DestroyWin();
+	g2_DestroyWin();
 	return 0;
 }

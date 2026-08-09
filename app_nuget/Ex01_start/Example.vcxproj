@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\glc2d.0.1.0.3\build\native\glc2d.props" Condition="Exists('packages\glc2d.0.1.0.3\build\native\glc2d.props')" />
+  <Import Project="packages\glc2d.0.1.0.4\build\native\glc2d.props" Condition="Exists('packages\glc2d.0.1.0.4\build\native\glc2d.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -249,6 +249,6 @@
       <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets'))" />
-    <Error Condition="!Exists('packages\glc2d.0.1.0.3\build\native\glc2d.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glc2d.0.1.0.3\build\native\glc2d.props'))" />
+    <Error Condition="!Exists('packages\glc2d.0.1.0.4\build\native\glc2d.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glc2d.0.1.0.4\build\native\glc2d.props'))" />
   </Target>
 </Project>

@@ -7,7 +7,7 @@
 
 using std::chrono::steady_clock;
 
-namespace glc2d
+namespace glc
 {
 	extern bool					m_bActive			;
 	extern int					m_bCursor			;
@@ -29,7 +29,8 @@ namespace glc2d
 	extern D3DPRESENT_PARAMETERS	m_d3dppWin		;
 	extern D3DPRESENT_PARAMETERS	m_d3dppFull		;
 	extern LPDIRECT3DDEVICE9		m_pd3dDevice	;		// Device
-	extern ILcSpriteX*				m_pSprite		;		// 2D Sprite
+	extern ILcSpriteX*				m_pLcSprite		;		// 2D Sprite
+	extern LPD3DXSPRITE				m_pd3dSprite	;		// DX Sprite for font draw
 
 	extern DWORD					m_dColor		;
 	extern steady_clock::time_point	m_timeBgn		;
@@ -39,24 +40,24 @@ namespace glc2d
 
 int D3DRestoreDevice()
 {
-	int hr = D3DResetDevice(glc2d::m_bWindowed);
+	int hr = D3DResetDevice(glc::m_bWindowed);
 	if(FAILED(hr))
 	{
 		return hr;
 	}
 
-	glc2d::m_bDeviceLost = false;
+	glc::m_bDeviceLost = false;
 	return S_OK;
 }
 
 int D3DCheckDevice()
 {
-	if(!glc2d::m_bDeviceLost)
+	if(!glc::m_bDeviceLost)
 	{
 		return S_OK;
 	}
 
-	int hr = glc2d::m_pd3dDevice->TestCooperativeLevel();
+	int hr = glc::m_pd3dDevice->TestCooperativeLevel();
 	if(hr == D3DERR_DEVICELOST)
 	{
 		return D3DERR_DEVICELOST;
@@ -72,7 +73,7 @@ int D3DCheckDevice()
 		return hr;
 	}
 
-	glc2d::m_bDeviceLost = false;
+	glc::m_bDeviceLost = false;
 	return S_OK;
 }
 
@@ -80,11 +81,11 @@ int D3DAdjustWindowForChange(bool bWindowed)
 {
 	if(bWindowed)
 	{
-		SetWindowLong(glc2d::m_hWnd, GWL_STYLE, glc2d::m_dWinStyle);
+		SetWindowLong(glc::m_hWnd, GWL_STYLE, glc::m_dWinStyle);
 	}
 	else
 	{
-		SetWindowLong(glc2d::m_hWnd, GWL_STYLE, WS_POPUP|WS_SYSMENU|WS_VISIBLE);
+		SetWindowLong(glc::m_hWnd, GWL_STYLE, WS_POPUP|WS_SYSMENU|WS_VISIBLE);
 	}
 	return S_OK;
 }
@@ -92,37 +93,41 @@ int D3DAdjustWindowForChange(bool bWindowed)
 int D3DResetDevice(bool bWindowed)
 {
 	int hr{};
-	D3DPRESENT_PARAMETERS d3dParam = bWindowed? glc2d::m_d3dppWin : glc2d::m_d3dppFull;
-	if(glc2d::m_pSprite)
-		glc2d::m_pSprite->OnLostDevice();
-	hr = glc2d::LcDev_FontOnLostDevice();
+	D3DPRESENT_PARAMETERS d3dParam = bWindowed? glc::m_d3dppWin : glc::m_d3dppFull;
+	if(	glc::m_pd3dSprite)
+		glc::m_pd3dSprite->OnLostDevice();
+	if(glc::m_pLcSprite)
+		glc::m_pLcSprite->OnLostDevice();
+	hr = glc::LcDev_FontOnLostDevice();
 
-	if(FAILED(hr = glc2d::m_pd3dDevice->Reset(&d3dParam)))
+	if(FAILED(hr = glc::m_pd3dDevice->Reset(&d3dParam)))
 		return hr;
 	// Sprite Reset
-	if(glc2d::m_pSprite)
-		glc2d::m_pSprite->OnResetDevice();
+	if(glc::m_pLcSprite)
+		glc::m_pLcSprite->OnResetDevice();
 
-	hr = glc2d::LcDev_FontOnResetDevice();
+	if(glc::m_pd3dSprite)
+		glc::m_pd3dSprite->OnResetDevice();
+	hr = glc::LcDev_FontOnResetDevice();
 
 	return S_OK;
 }
 
 int D3DToggleScreen()
 {
-	if(glc2d::m_bWindowed == glc2d::m_bToggledWin)
+	if(glc::m_bWindowed == glc::m_bToggledWin)
 	{
-		glc2d::m_bToggledEvent = false;
+		glc::m_bToggledEvent = false;
 		return S_OK;
 	}
-	D3DAdjustWindowForChange(glc2d::m_bToggledWin);
-	int hr = D3DResetDevice(glc2d::m_bToggledWin);
+	D3DAdjustWindowForChange(glc::m_bToggledWin);
+	int hr = D3DResetDevice(glc::m_bToggledWin);
 	if(FAILED(hr))
 	{
-		D3DAdjustWindowForChange(glc2d::m_bWindowed);
+		D3DAdjustWindowForChange(glc::m_bWindowed);
 		return hr;
 	}
-	glc2d::m_bWindowed = glc2d::m_bToggledWin;
-	glc2d::m_bToggledEvent = false;
+	glc::m_bWindowed = glc::m_bToggledWin;
+	glc::m_bToggledEvent = false;
 	return S_OK;
 }

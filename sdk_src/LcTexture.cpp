@@ -9,7 +9,7 @@
 
 #include "ILcTexture.h"
 
-namespace glc2d
+namespace glc
 {
 
 class CLcTexture : public ILcTexture
@@ -41,12 +41,11 @@ public:
 
 	CSTR	GetName();
 
-	static	int					m_nIDTex;		// Texture ID
-	static	LPDIRECT3DDEVICE9	m_pDevice;		// Direct3DDevice
+	inline static	int					m_nIDTex {};		// Texture ID
+	inline static	LPDIRECT3DDEVICE9	m_pDevice{};		// Direct3DDevice
 };
 
-int					CLcTexture::m_nIDTex	= 0;	// Texture ID
-LPDIRECT3DDEVICE9	CLcTexture::m_pDevice	= {};	// Direct3DDevice
+
 typedef std::vector<ILcTexture* >	lsPDTX;
 static lsPDTX	m_vTex;								// Texture List
 
@@ -192,7 +191,7 @@ ILcTexture* LcDev_TextureFind(CSTR sFile)
 			return 0 ==:: _stricmp(pTex->GetName(), sFile);
 		}
 	);
-	return itr != glc2d::m_vTex.end() ? *itr : nullptr;
+	return itr != glc::m_vTex.end() ? *itr : nullptr;
 }
 
 int LcDev_TextureCreate(ILcTexture** pData
@@ -219,40 +218,40 @@ int LcDev_TextureCreate(ILcTexture** pData
 	return 0;
 }
 
-};// namespace glc2d
+};// namespace glc
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int	glc2d_TextureLoad(CSTR sFileName, DWORD dc)
+int	g2_TextureLoad(CSTR sFileName, DWORD dc)
 {
-	glc2d::ILcTexture*	pTexture = {};
-	if(FAILED(glc2d::LcDev_TextureCreate(&pTexture, (VPTR)sFileName, &dc)))
+	glc::ILcTexture*	pTexture = {};
+	if(FAILED(glc::LcDev_TextureCreate(&pTexture, (VPTR)sFileName, &dc)))
 		return -1;
 
-	glc2d::m_vTex.push_back(pTexture);
+	glc::m_vTex.push_back(pTexture);
 
 	// ID를 돌려 준다.
 	return pTexture->GetID();
 }
 
-int glc2d_TextureRelease(int _nID)
+int g2_TextureRelease(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+	auto itr = std::find_if(glc::m_vTex.begin(), glc::m_vTex.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
-	if(itr == glc2d::m_vTex.end())
+	if(itr == glc::m_vTex.end())
 	{
 		return -1;
 	}
 	SAFE_DELETE(*itr);
-	glc2d::m_vTex.erase(itr);
-	return static_cast<int>(glc2d::m_vTex.size());
+	glc::m_vTex.erase(itr);
+	return static_cast<int>(glc::m_vTex.size());
 }
 
-int glc2d_TextureWidth(int _nID)
+int g2_TextureWidth(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+	auto itr = std::find_if(glc::m_vTex.begin(), glc::m_vTex.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
-	if(itr == glc2d::m_vTex.end())
+	if(itr == glc::m_vTex.end())
 	{
 		return -1;
 	}
@@ -260,11 +259,11 @@ int glc2d_TextureWidth(int _nID)
 	return ret->GetImageWidth();
 }
 
-int glc2d_TextureHeight(int _nID)
+int g2_TextureHeight(int _nID)
 {
-	auto itr = std::find_if(glc2d::m_vTex.begin(), glc2d::m_vTex.end()
+	auto itr = std::find_if(glc::m_vTex.begin(), glc::m_vTex.end()
 		, [_nID](const auto& p){return p->GetID() == _nID;});
-	if(itr == glc2d::m_vTex.end())
+	if(itr == glc::m_vTex.end())
 	{
 		return -1;
 	}
