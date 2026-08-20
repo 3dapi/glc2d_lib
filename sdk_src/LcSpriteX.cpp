@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <d3d9.h>
 
+#include "glcInternal.h"
 #include "ILcTexture.h"
 #include "ILcSpriteX.h"
 

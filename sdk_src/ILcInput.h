@@ -6,7 +6,6 @@
 #define _ILcInput_H_
 
 #include "glcType.h"
-#include "glcInternal.h"
 
 namespace glc
 {

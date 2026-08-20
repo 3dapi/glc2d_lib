@@ -99,7 +99,7 @@ int		g2_TextureWidth(int _nKey);										// 이미지 파일 너비
 int		g2_TextureHeight(int _nKey);									// 이미지 파일 높이
 
 int		g2_Draw2D(const int _nKey
-				, const RECT* pSrcRect									// 그릴 영역
+				, const RECT* pSrcRect									// 그릴 이미지 영역 (left, top, right, bottom)
 				, const VEC2* pTranslate=NULL							// 이동 위치
 				, const VEC2* pScaling=NULL								// 크기 변환 값
 				, const VEC2* pRotation=NULL							// 회전 중심 위치
@@ -114,26 +114,15 @@ int		g2_DrawAlphaOption(int nAlphaMethod=0);
 // for Font
 int		g2_FontCreate(CSTR sName, long iH, long iItalic=0);				// 폰트 객체 생성
 int		g2_FontDrawText(const int nIdx									// 문자열 출력
-					   ,const long left
-					   ,const long top
-					   ,const long right
-					   ,const long bottom
-					   ,const DWORD fontColor
-					   ,const char *format, ...);
-
-int g2_Font2DCreate(CSTR sName, long iH, long iItalic);
-int g2_Font2DSetString(int nID, CSTR sStr);
-int g2_Font2DSetPos(int nID, float x, float y, DWORD dwAlign = FNT_ALIGN_H_L | FNT_ALIGN_V_T);
-int g2_Font2DSetThick(int nID, int thickX, int thickY);
-int g2_Font2DSetColor(int nID, DWORD frontColor, DWORD backColor);
-int g2_Font2DDraw(int nID);
-int g2_Font2DRelease(int nID);
+					   , const RECT& rc									// 화면에 영역(left, top, right, bottom)
+					   , const DWORD fontColor
+					   , const char *format, ...);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // sound
 int		g2_SoundLoad(CSTR sFileName);									// 사운드 로딩
 int		g2_SoundRelease(int _nKey);										// 사운드 객체 해제
-void	g2_SoundPlay(int _nKey);										// 사운드 실행
+void	g2_SoundPlay(int _nKey, bool bLoop=false);						// 사운드 실행
 void	g2_SoundStop(int _nKey);										// 사운드 멈춤
 void	g2_SoundReset(int _nKey);										// 사운드 리셋
 bool	g2_SoundIsPlaying(int _nKey);									// 사운드 실행중?

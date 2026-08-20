@@ -75,35 +75,35 @@ int IntroRender()
 	//배경 출력
 	g2_Draw2D(ScreenSrc[3].nTx, &rt3);
 
-	g2_FontDrawText(g_nFont1, 230, 50, 500, 70, 0xffFFFF44,  "=======================");
-	g2_FontDrawText(g_nFont1, 230, 70, 500, 90, 0xffFFFF44,  "====  지 렁 이 게 임  ====");
-	g2_FontDrawText(g_nFont1, 230, 90, 500, 110, 0xffFFFF44, "=======================");
+	g2_FontDrawText(g_nFont1, {230, 50, 500,  70}, 0xffFFFF44,  "=======================");
+	g2_FontDrawText(g_nFont1, {230, 70, 500,  90}, 0xffFFFF44,  "====  지 렁 이 게 임  ====");
+	g2_FontDrawText(g_nFont1, {230, 90, 500, 110}, 0xffFFFF44, "=======================");
 
-	g2_FontDrawText(g_nFont1, 280, 130, 500, 150, 0xffFFFF44, "청강문화산업대학교");
-	g2_FontDrawText(g_nFont1, 290, 150, 500, 170, 0xffFFFF44, "게임과 200614013");
-	g2_FontDrawText(g_nFont1, 370, 170, 500, 190, 0xffFFFF44, "박세연");
+	g2_FontDrawText(g_nFont1, {280, 130, 500, 150}, 0xffFFFF44, "청강문화산업대학교");
+	g2_FontDrawText(g_nFont1, {290, 150, 500, 170}, 0xffFFFF44, "게임과 200614013");
+	g2_FontDrawText(g_nFont1, {370, 170, 500, 190}, 0xffFFFF44, "박세연");
 
-	g2_FontDrawText(g_nFont1, 230, 230, 500, 250, 0xffFFFF44, " *  게  임  설  명  *");
-	g2_FontDrawText(g_nFont1, 180, 270, 500, 290, 0xffFFFF44, " 상 하 좌 우 방향키로 움직일수있다");
-	g2_FontDrawText(g_nFont1, 180, 290, 500, 310, 0xffFFFF44, " 벽에 부딪히거나 꼬리에 부딪히면 Game Over!");
-	g2_FontDrawText(g_nFont1, 180, 310, 600, 330, 0xffFFFF44, " 난이도 선택 : ( + / - )");
+	g2_FontDrawText(g_nFont1, {230, 230, 500, 250}, 0xffFFFF44, " *  게  임  설  명  *");
+	g2_FontDrawText(g_nFont1, {180, 270, 500, 290}, 0xffFFFF44, " 상 하 좌 우 방향키로 움직일수있다");
+	g2_FontDrawText(g_nFont1, {180, 290, 500, 310}, 0xffFFFF44, " 벽에 부딪히거나 꼬리에 부딪히면 Game Over!");
+	g2_FontDrawText(g_nFont1, {180, 310, 600, 330}, 0xffFFFF44, " 난이도 선택 : ( + / - )");
 
 	switch(g_Level)
 	{
 	case 0:
-		g2_FontDrawText(g_nFont1, 200, 350, 600, 370, 0xffFFFF44, "  +나 -를 눌러서 선택해봐");
+		g2_FontDrawText(g_nFont1, {200, 350, 600, 370}, 0xffFFFF44, "  +나 -를 눌러서 선택해봐");
 		break;
 	case 1:
-		g2_FontDrawText(g_nFont1, 180, 370, 600, 390, 0xffFFFF44, "쉬운거 할려고? 세상 너무 쉽게 사는군!!");
+		g2_FontDrawText(g_nFont1, {180, 370, 600, 390}, 0xffFFFF44, "쉬운거 할려고? 세상 너무 쉽게 사는군!!");
 		break;
 	case 2:
-		g2_FontDrawText(g_nFont1, 180, 390, 600, 410, 0xffFFFF44, "너무 무난한거 아니야? 좀더 올려보시지!");
+		g2_FontDrawText(g_nFont1, {180, 390, 600, 410}, 0xffFFFF44, "너무 무난한거 아니야? 좀더 올려보시지!");
 		break;
 	case 3:
-		g2_FontDrawText(g_nFont1, 180, 410, 600, 430, 0xffFFFF44, "오~! 좀 하겠는데~? 도전 정신 기억하지!");
+		g2_FontDrawText(g_nFont1, {180, 410, 600, 430}, 0xffFFFF44, "오~! 좀 하겠는데~? 도전 정신 기억하지!");
 		break;
 	case 4:
-		g2_FontDrawText(g_nFont1, 180, 430, 600, 450, 0xffFFFF44, "하드코어인데 이거 1Stage 깨면 내가 밥사주마!");
+		g2_FontDrawText(g_nFont1, {180, 430, 600, 450}, 0xffFFFF44, "하드코어인데 이거 1Stage 깨면 내가 밥사주마!");
 		break;
 	}
 
@@ -160,7 +160,7 @@ int PlayRender()
 	// 옆면 출력
 	VEC2	vcPos10(480, 0);
 	g2_Draw2D(ScreenSrc[10].nTx, &rt10,&vcPos10);
-	g2_FontDrawText(g_nFont1, 530, 170, 600, 190, 0xffFFFFFF, "점수 : %d", g_Next_Stage*100);
+	g2_FontDrawText(g_nFont1, {530, 170, 600, 190}, 0xffFFFFFF, "점수 : %d", g_Next_Stage*100);
 
 
 	// 벽
@@ -359,17 +359,17 @@ int EndRender()
 	g2_Draw2D(ScreenSrc[8].nTx, &rt8);
 
 
-	g2_FontDrawText(g_nFont1, 230, 50, 500, 70, 0xffFFFF44,  "=======================");
-	g2_FontDrawText(g_nFont1, 230, 70, 500, 90, 0xffFFFF44,  "====  지 렁 이 게 임  ====");
-	g2_FontDrawText(g_nFont1, 230, 90, 500, 110, 0xffFFFF44, "=======================");
+	g2_FontDrawText(g_nFont1, {230, 50, 500,  70}, 0xffFFFF44,  "=======================");
+	g2_FontDrawText(g_nFont1, {230, 70, 500,  90}, 0xffFFFF44,  "====  지 렁 이 게 임  ====");
+	g2_FontDrawText(g_nFont1, {230, 90, 500, 110}, 0xffFFFF44, "=======================");
 
-	g2_FontDrawText(g_nFont1, 280, 130, 500, 150, 0xffFFFF44, "청강문화산업대학교");
-	g2_FontDrawText(g_nFont1, 290, 150, 500, 170, 0xffFFFF44, "게임과 200614013");
-	g2_FontDrawText(g_nFont1, 370, 170, 500, 190, 0xffFFFF44, "박세연");
+	g2_FontDrawText(g_nFont1, {280, 130, 500, 150}, 0xffFFFF44, "청강문화산업대학교");
+	g2_FontDrawText(g_nFont1, {290, 150, 500, 170}, 0xffFFFF44, "게임과 200614013");
+	g2_FontDrawText(g_nFont1, {370, 170, 500, 190}, 0xffFFFF44, "박세연");
 
-	g2_FontDrawText(g_nFont1, 200, 230, 500, 250, 0xffFFFF44, " 다음번에는 슈팅 게임을 제작해보자");
-	g2_FontDrawText(g_nFont1, 200, 270, 500, 290, 0xffFFFF44, " 재 시작은 스페이스바 를 입력");
-	g2_FontDrawText(g_nFont1, 200, 290, 500, 310, 0xffFFFF44, " 수고 많으셨삼");
+	g2_FontDrawText(g_nFont1, {200, 230, 500, 250}, 0xffFFFF44, " 다음번에는 슈팅 게임을 제작해보자");
+	g2_FontDrawText(g_nFont1, {200, 270, 500, 290}, 0xffFFFF44, " 재 시작은 스페이스바 를 입력");
+	g2_FontDrawText(g_nFont1, {200, 290, 500, 310}, 0xffFFFF44, " 수고 많으셨삼");
 
 	return 0;
 }

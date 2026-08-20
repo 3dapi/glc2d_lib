@@ -1,12 +1,14 @@
 ﻿
 #include <algorithm>
 #include <vector>
+#include <string>
 
 #include <windows.h>
 #include <stdio.h>
 
 #include <d3d9.h>
 
+#include "glcInternal.h"
 #include "ILcTexture.h"
 
 namespace glc
@@ -16,7 +18,7 @@ class CLcTexture : public ILcTexture
 {
 protected:
 	int					m_nID{-1};
-	char				m_sFile[128]{};
+	std::string			m_sFile;
 	LPDIRECT3DTEXTURE9	m_pTex{};
 	D3DXIMAGE_INFO		m_pImg{};
 
@@ -118,7 +120,8 @@ void CLcTexture::Destroy()
 {
 	SAFE_RELEASE(	m_pTex	);
 	memset(&m_pImg, 0, sizeof m_pImg);
-	memset(m_sFile, 0, sizeof m_sFile);
+	if(!m_sFile.empty())
+		m_sFile.clear();
 }
 
 int CLcTexture::GetImageWidth()
@@ -157,7 +160,7 @@ void CLcTexture::GetImageRect(void* v)
 
 CSTR CLcTexture::GetName()
 {
-	return m_sFile;
+	return m_sFile.c_str();
 }
 
 int LcDev_TextureInit(void* pDev)

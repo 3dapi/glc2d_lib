@@ -38,6 +38,15 @@
     <ClCompile Include="d3dapp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LcMfPlayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LcDsSound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glcInternal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dsutil.h">

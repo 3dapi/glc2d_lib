@@ -266,7 +266,7 @@ int GameRender(void)
 		RECT rc={0,0, (LONG)m_screenW, (LONG)m_screenH};
 		g2_Draw2D(m_pTx[m_nImg], &rc);
 
-		int c= g2_FontDrawText(nFont1, 200, 300, 500, 340, 0xffFFBB77, "추카추가 !!!");
+		int c= g2_FontDrawText(nFont1, {200, 300, 500, 340}, 0xffFFBB77, "추카추가 !!!");
 	}
 
 	return 0;

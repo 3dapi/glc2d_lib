@@ -38,6 +38,7 @@ const KEYCODE* pKey;
 
 int		nSound1;
 int		nSound2;
+int		nBgm;
 
 
 int main()
@@ -55,6 +56,9 @@ int main()
 	nFont1 = g2_FontCreate("Arial", 30, 0);
 	nSound1 = g2_SoundLoad("sound/bounce.wav");
 	nSound2 = g2_SoundLoad("sound/move3.wav");
+	nBgm = g2_SoundLoad("sound/background.mp3");
+
+	g2_SoundPlay(nBgm, true);
 
 	g2_Run();
 
@@ -96,7 +100,7 @@ int Render()
 	g2_Draw2D(nTx1, &rt1);
 
 
-	int c= g2_FontDrawText(nFont1, 20, 300, 500, 340
+	int c= g2_FontDrawText(nFont1, {20, 300, 500, 340}
 			, 0xffFFAA44, "Tri to Press Left or Right Key");
 
 

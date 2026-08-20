@@ -309,12 +309,7 @@ g_AniRc.bottom = g_AniImgH;
 ```cpp
 VEC2 mousePos(g_mouseX, g_mouseY);
 
-g2_Draw2D(
-    g_AniTex,
-    &g_AniRc,
-    &mousePos,
-    &VEC2(2, 2)
-);
+g2_Draw2D(g_AniTex, &g_AniRc, &mousePos, &VEC2(2, 2) );
 ```
 
 `g2_Draw2D()`에 원본 영역 `RECT`, 출력 위치, 크기 배율을 전달하여 현재 프레임을 화면에 출력합니다.
@@ -337,47 +332,19 @@ int nFont3 = g2_FontCreate("궁서", 20, 1);
 ### 문자열 출력
 
 ```cpp
-g2_FontDrawText(
-    nFont2,
-    10,
-    10,
-    500,
-    40,
-    0xFFFFFF00,
-    "출력할 메시지"
-);
+g2_FontDrawText(nFont2, {10, 10, 500, 40}, 0xFFFFFF00, "출력할 메시지");
 ```
 
 `g2_FontDrawText()`는 출력 영역과 색상을 지정할 수 있으며, `printf`와 비슷하게 값을 포함한 문자열도 출력할 수 있습니다.
 
 ```cpp
-g2_FontDrawText(
-    nFont3,
-    mouseX,
-    mouseY,
-    mouseX + 500,
-    mouseY + 40,
-    0xFFFFAAFF,
-    "Mouse 위치: %d %d %d ",
-    mouseX,
-    mouseY,
-    mouseZ
-);
+g2_FontDrawText(nFont3, {mouseX, mouseY, mouseX + 500, mouseY + 40}, 0xFFFFAAFF, "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ );
 ```
 
 ### 기본 사용 형태
 
 ```cpp
-g2_FontDrawText(
-    font,
-    left,
-    top,
-    right,
-    bottom,
-    color,
-    format,
-    ...
-);
+g2_FontDrawText(font, {left, top, right, bottom}, color, format, ...);
 ```
 
 
@@ -442,6 +409,8 @@ nSound2 = g2_SoundLoad("sound/move3.wav");
 
 ```cpp
 g2_SoundPlay(nSound1);
+// looping
+g2_SoundPlay(nBgm, true);
 ```
 
 ### 재생 상태 확인

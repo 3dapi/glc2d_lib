@@ -156,16 +156,10 @@ DWORD	g2_GetClearColor()				{	return glc::m_dColor;			}
 void g2_SetWindowTitle(const char *format, ...)
 {
 	va_list ap;
-	std::string s="";
 	if(!format)
 		return;
 	va_start(ap, format);
-	int r = vsnprintf(nullptr, 0, format, ap);
-	if(0<r)
-	{
-		s.resize(r);
-		r = vsnprintf(&s[0], r+1, format, ap);
-	}
+	std::string s= glc::FormatString(format, ap);
 	va_end(ap);
 	SetWindowTextA(glc::m_hWnd, s.c_str());
 }
@@ -307,7 +301,15 @@ static int CreateD3D9()
 
 int g2_InitSdk()
 {
+	// random seed
 	srand((unsigned int)time(NULL));
+
+	auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+	if(FAILED(hr))
+	{
+		//printf("Error: COM Initialize Failed\n");
+		return -1;
+	}
 	g2_SetFrameMove(g2_DefaultFrameMove);
 	g2_SetRender(g2_DefaultRender);
 	g2_SetKeyboard(g2_DefaultKeyboard);
@@ -415,6 +417,8 @@ void g2_DestroyWin()
 	if(glc::m_pd3dSprite){	glc::m_pd3dSprite->Release();	glc::m_pd3dSprite = {};	}
 	if(glc::m_pd3dDevice){	glc::m_pd3dDevice->Release();	glc::m_pd3dDevice = {};	}
 	if(glc::m_pD3D)		{	glc::m_pD3D->Release();			glc::m_pD3D = {};		}
+
+	CoUninitialize();
 }
 
 int g2_Run()

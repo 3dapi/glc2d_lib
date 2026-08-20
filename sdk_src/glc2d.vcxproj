@@ -236,8 +236,11 @@ copy glc2d.h ..\include</Command>
   <ItemGroup>
     <ClCompile Include="d3dapp.cpp" />
     <ClCompile Include="dsutil.cpp" />
+    <ClCompile Include="glcInternal.cpp" />
+    <ClCompile Include="LcDsSound.cpp" />
     <ClCompile Include="LcFont.cpp" />
     <ClCompile Include="LcInput.cpp" />
+    <ClCompile Include="LcMfPlayer.cpp" />
     <ClCompile Include="LcModel.cpp" />
     <ClCompile Include="glc2d.cpp" />
     <ClCompile Include="LcSound.cpp" />

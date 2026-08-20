@@ -5,10 +5,12 @@
 
 #include <algorithm>
 #include <vector>
+#include <string>
 
 #include <windows.h>
 #include <d3d9.h>
 
+#include "glcInternal.h"
 #include "ILcSpriteX.h"
 #include "ILcTexture.h"
 #include "ILcModel.h"
@@ -38,7 +40,7 @@ public:
 
 protected:
 	int						m_nID		{-1};
-	char					m_sFile[128]{};
+	std::string				m_sFile		;
 	int						m_AniTot	{};	// Ani Total Number
 	DWORD					m_AniDelta	{};	// 시간 간격;
 	ILcTexture*				m_AniTex	{};	// 애니 텍스처
@@ -128,7 +130,7 @@ int CLcModel2D::GetID()
 
 CSTR CLcModel2D::GetName()
 {
-	return m_sFile;
+	return m_sFile.c_str();
 }
 
 void CLcModel2D::SetPos(const float* pPos)
@@ -190,11 +192,11 @@ int CLcModel2D::FindImageRect(void* pOut/*Out*/, int nIndex)
 
 int CLcModel2D::Create(void* p1, void* p2, void* p3, void* p4)
 {
-	::strcpy(m_sFile, (CSTR)p1);
+	m_sFile = (CSTR)p1;
 
 	char	sLine[512]={0};
 
-	FILE* fp = ::fopen(m_sFile, "rt");
+	FILE* fp = ::fopen(m_sFile.c_str(), "rt");
 	if(!fp)
 		return -1;
 

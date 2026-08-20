@@ -6,7 +6,6 @@
 #define _ILcTexture_H_
 
 #include "glcType.h"
-#include "glcInternal.h"
 
 namespace glc
 {

@@ -75,11 +75,11 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 	g2_Draw2D(nTx1, &rt1);
-	g2_FontDrawText(nFont2, 10, 10, 500, 40, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
+	g2_FontDrawText(nFont2, {10, 10, 500, 40}, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
 
 	if( g2_GetMouseEvent(1))		// R button
 	{
-		int c= g2_FontDrawText(nFont3, mouseX, mouseY, mouseX+500, mouseY+ 40, 0xffffaaff , "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
+		int c= g2_FontDrawText(nFont3, {mouseX, mouseY, mouseX+500, mouseY+ 40}, 0xffffaaff , "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
 	}
 
 	return 0;

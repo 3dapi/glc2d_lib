@@ -8,6 +8,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+#include "glcInternal.h"
 #include "ILcFont.h"
 
 namespace glc
@@ -209,52 +210,33 @@ int g2_FontCreate(CSTR sName, long iH, long iItalic)
 	return pFont->GetID();
 }
 
-int g2_FontDrawText(const int nIdx
-					, const long lLeft
-					, const long lTop
-					, const long lRight
-					, const long lBottom
-					, const DWORD fontColor
-					, const char *format, ...)
+int g2_FontDrawText(const int nIdx, const RECT& rc, const DWORD fontColor, const char *format, ...)
 {
 	glc::ILcFont* pFont	{};
-	ID3DXFont*	pDxFnt		{};
-
+	ID3DXFont*	pDxFnt	{};
 	pFont = glc::LcDev_FontFind(nIdx);
 	if(!pFont)
 		return -1;
-
 	pDxFnt = (ID3DXFont*)pFont->GetFont();
 	if(!pDxFnt)
 		return -1;
-
-	va_list ap;
-	std::string s="";
 	if(!format)
 		return -1;
+	va_list ap;
 	va_start(ap, format);
-	int r = vsnprintf(nullptr, 0, format, ap);
-	if(0<r)
-	{
-		s.resize(r);
-		r = vsnprintf(&s[0], r+1, format, ap);
-	}
+	std::string s= glc::FormatString(format, ap);
 	va_end(ap);
-	
 	if(!s.length())
 		return -2;
 
-    RECT rc;
-	rc.left		= lLeft;
-	rc.top		= lTop;
-    rc.right	= lRight+20;
-	rc.bottom	= lBottom;
-
+	RECT rct = rc;
+	rct.right += 20;
 	auto sprite = glc::CLcFont::m_pLcSprite;
 	if(sprite)
 		sprite->Begin(D3DXSPRITE_ALPHABLEND);
+
 	sprite->SetTransform(&glc::CLcFont::m_tm);
-	int hr = pDxFnt->DrawText(sprite, s.c_str(), -1, &rc, 0, fontColor);
+	int hr = pDxFnt->DrawText(sprite, s.c_str(), -1, &rct, 0, fontColor);
 	if(sprite)
 		sprite->End();
 

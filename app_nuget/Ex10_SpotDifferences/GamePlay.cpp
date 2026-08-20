@@ -290,7 +290,7 @@ void DrawGameUI()
 	char buf[64];
 	sprintf(buf, "Time: %d", g_timeRemain);
 
-	g2_FontDrawText(g_fontTimer, 10, 440, 300, 470, 0xFFFFFFFF, buf);
+	g2_FontDrawText(g_fontTimer, {10, 440, 300, 470}, 0xFFFFFFFF, buf);
 }
 
 int GameRender(void)
@@ -319,11 +319,11 @@ int GameRender(void)
 	{
 		if(g_isVictory)
 		{
-			g2_FontDrawText(g_fontMain, 250, 200, 800, 400, 0xFFFF00FF, "You Win!!!");
+			g2_FontDrawText(g_fontMain, {250, 200, 800, 400}, 0xFFFF00FF, "You Win!!!");
 		}
 		else
 		{
-			g2_FontDrawText(g_fontMain, 250, 200, 800, 400, 0xFFFF0000, "Game Over");
+			g2_FontDrawText(g_fontMain, {250, 200, 800, 400}, 0xFFFF0000, "Game Over");
 		}
 	}
 

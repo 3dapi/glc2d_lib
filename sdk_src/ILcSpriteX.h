@@ -7,7 +7,6 @@
 #define _ILcSpriteX_H_
 
 #include "glcType.h"
-#include "glcInternal.h"
 
 namespace glc
 {
