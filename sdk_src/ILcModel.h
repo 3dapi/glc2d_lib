@@ -34,7 +34,7 @@ int	LcDev_ModelCreate(ILcModel** pData
 					  , void* p4=NULL
 					);
 
-int			LcDev_ModelInit(void* pSprite);	// ID3DXSprite Pointer
+int			LcDev_ModelInit();
 ILcModel*	LcDev_ModelFind(int nID);
 void		LcDev_ModelDestroy();
 

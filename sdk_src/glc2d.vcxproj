@@ -244,7 +244,6 @@ copy glc2d.h ..\include</Command>
     <ClCompile Include="LcModel.cpp" />
     <ClCompile Include="glc2d.cpp" />
     <ClCompile Include="LcSound.cpp" />
-    <ClCompile Include="LcSpriteX.cpp" />
     <ClCompile Include="LcTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -256,7 +255,6 @@ copy glc2d.h ..\include</Command>
     <ClInclude Include="ILcInput.h" />
     <ClInclude Include="ILcModel.h" />
     <ClInclude Include="ILcSound.h" />
-    <ClInclude Include="ILcSpriteX.h" />
     <ClInclude Include="ILcTexture.h" />
     <ClInclude Include="glc2d.h" />
   </ItemGroup>

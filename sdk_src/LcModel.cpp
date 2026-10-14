@@ -11,7 +11,6 @@
 #include <d3d9.h>
 
 #include "glcInternal.h"
-#include "ILcSpriteX.h"
 #include "ILcTexture.h"
 #include "ILcModel.h"
 
@@ -72,14 +71,12 @@ public:
 	typedef std::vector<ILcModel*>		lsModel;
 
 	inline static int			m_nIDModel{};		// Model9 ID
-	inline static ILcSpriteX*	m_pLcSprite {};
 	inline static lsModel*		m_vModel  {};
 };
 
 
-int LcDev_ModelInit(void* pSprite)
+int LcDev_ModelInit()
 {
-	CLcModel2D::m_pLcSprite	= (ILcSpriteX*)pSprite;
 	CLcModel2D::m_vModel	= new CLcModel2D::lsModel;
 
 	return 0;
@@ -259,11 +256,10 @@ int CLcModel2D::Create(void* p1, void* p2, void* p3, void* p4)
 
 void CLcModel2D::Render()
 {
-	auto pTex = (LPDIRECT3DTEXTURE9)m_AniTex->GetTexture();
-
-	m_pLcSprite->Begin();
-	m_pLcSprite->Draw(pTex, &m_ImgRc, NULL, &m_vcPos, m_dColor);
-	m_pLcSprite->End();
+	if(!m_AniTex)
+		return;
+	const VEC2 position(m_vcPos.x, m_vcPos.y);
+	LcDev_TextureDraw(m_AniTex, &m_ImgRc, &position, nullptr, nullptr, 0.0F, m_dColor, 0);
 }
 
 ILcModel* LcDev_ModelFind(CSTR sFile)

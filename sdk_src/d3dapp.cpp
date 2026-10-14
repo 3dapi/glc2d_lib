@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include "d3dapp.h"
-#include "ILcSpriteX.h"
 #include "ILcFont.h"
 
 using std::chrono::steady_clock;
@@ -28,8 +27,7 @@ namespace glc
 	extern D3DPRESENT_PARAMETERS	m_d3dppWin		;
 	extern D3DPRESENT_PARAMETERS	m_d3dppFull		;
 	extern LPDIRECT3DDEVICE9		m_pd3dDevice	;		// Device
-	extern ILcSpriteX*				m_pLcSprite		;		// 2D Sprite
-	extern LPD3DXSPRITE				m_pd3dSprite	;		// DX Sprite for font draw
+	extern LPD3DXSPRITE				m_pd3dSprite	;		// Shared sprite for images and fonts
 
 	extern DWORD					m_dColor		;
 	extern steady_clock::time_point	m_timeBgn		;
@@ -95,15 +93,11 @@ int D3DResetDevice(bool bWindowed)
 	D3DPRESENT_PARAMETERS d3dParam = bWindowed? glc::m_d3dppWin : glc::m_d3dppFull;
 	if(	glc::m_pd3dSprite)
 		glc::m_pd3dSprite->OnLostDevice();
-	if(glc::m_pLcSprite)
-		glc::m_pLcSprite->OnLostDevice();
 	hr = glc::LcDev_FontOnLostDevice();
 
 	if(FAILED(hr = glc::m_pd3dDevice->Reset(&d3dParam)))
 		return hr;
 	// Sprite Reset
-	if(glc::m_pLcSprite)
-		glc::m_pLcSprite->OnResetDevice();
 
 	if(glc::m_pd3dSprite)
 		glc::m_pd3dSprite->OnResetDevice();

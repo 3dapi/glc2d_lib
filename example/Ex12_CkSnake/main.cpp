@@ -126,7 +126,7 @@ int FrameMove()
 
 	if(g_Input.pKeyNew[VK_MENU] == EINPUT_PRESS && g_Input.pKeyNew[VK_RETURN] == EINPUT_DOWN)
 	{
-		g2_ChangeWindow(!g2_GetWindowMode());
+		g2_SetWindowMode(!g2_GetWindowMode());
 	}
 
 	switch(g_GameState)

@@ -18,6 +18,7 @@
 
 #include "glcType.h"
 #include <windows.h>
+#include <initializer_list>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum EInput
@@ -50,13 +51,13 @@ int		g2_InitSdk();													// Initialize SDK
 // Create window and DirectX
 int		g2_CreateWin(int x,int y										// Screen position x, y
 						 , int ScnW, int ScnH							// Screen Width, height
-						 , CSTR sName, bool bFull=true					// Class name, Full screen mode
+						 , CSTR sName, bool bWindowed=true					// Class name, windowed: true, fullscreen: false
 						 , float scnScale = 1.0F						// Screen Scale
 						 );
 
 void	g2_DestroyWin();												// 윈도우와 DirectX소멸
 int		g2_Run();														// 게임 루프
-int		g2_ChangeWindow(bool bWindow);									// Change Window Mode: windows: true, full: false
+int		g2_SetWindowMode(bool bWindowed);								// Change Window Mode: windows: true, full: false
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setting the runtime Function pointer
@@ -112,11 +113,21 @@ int		g2_DrawAlphaOption(int nAlphaMethod=0);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // for Font
+int		g2_FontRegisterFile(CSTR fileName);								// Register a private font file; engine removes it on shutdown.
 int		g2_FontCreate(CSTR sName, long iH, long iItalic=0);				// 폰트 객체 생성
 int		g2_FontDrawText(const int nIdx									// 문자열 출력
 					   , const RECT& rc									// 화면에 영역(left, top, right, bottom)
 					   , const DWORD fontColor
 					   , const char *format, ...);
+int		g2_FontDrawText(const int nIdx									// 문자열 출력
+					   , const VEC2i& pos								// 출력 시작 위치(x, y). 크기는 g2_FontCreate의 iH 사용
+					   , const DWORD fontColor
+					   , const char *format, ...);
+
+// Brace-list calls: {x, y} for a position, {left, top, right, bottom} for a region.
+// Other list sizes return -1.
+int g2_FontDrawText(int nIdx, std::initializer_list<LONG> coordinates,
+	DWORD fontColor, const char* format, ...);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // sound

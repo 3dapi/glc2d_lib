@@ -73,11 +73,11 @@ int FrameMove()
 	pKey = g2_GetKeyboard();
 	if(pKey[VK_SPACE])
 	{
-		g2_ChangeWindow(true);
+		g2_SetWindowMode(true);
 	}
 	if(pKey[VK_RCONTROL])
 	{
-		g2_ChangeWindow(false);
+		g2_SetWindowMode(false);
 	}
 
 	return 0;

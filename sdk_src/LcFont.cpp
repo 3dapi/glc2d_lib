@@ -2,14 +2,17 @@
 #pragma warning(disable: 4996)
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 #include <string>
+#include <utility>
 #include <windows.h>
 #include <d3d9.h>
 #include <d3dx9.h>
 
 #include "glcInternal.h"
 #include "ILcFont.h"
+#include "glc2d.h"
 
 namespace glc
 {
@@ -41,6 +44,13 @@ public:
 
 typedef std::vector<ILcFont* >	lsLcFont;
 static lsLcFont	m_vFont;		// Font List
+
+struct FontFile
+{
+	std::wstring path;
+	int count{};
+};
+static std::vector<FontFile> m_vFontFiles;
 
 CLcFont::CLcFont()
 {
@@ -92,7 +102,7 @@ int CLcFont::Create(void* p1,void* p2,void* p3,void* p4)
 		iH, 0
 			, FW_EXTRABOLD, 1
 			, iItalic
-			, HANGUL_CHARSET, OUT_DEFAULT_PRECIS
+			, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS
 			, ANTIALIASED_QUALITY, FF_DONTCARE, "Arial"
 	};
 	strcpy(hFont.FaceName, sName);
@@ -165,6 +175,12 @@ void LcDev_FontDestroy()
 		SAFE_DELETE( v	);
 	}
 	m_vFont.clear();
+	// Font objects must release their GDI handles before file registrations.
+	for(auto it = m_vFontFiles.rbegin(); it != m_vFontFiles.rend(); ++it)
+		RemoveFontResourceExW(it->path.c_str(), FR_PRIVATE, nullptr);
+	m_vFontFiles.clear();
+	CLcFont::m_pDevice = nullptr;
+	CLcFont::m_pLcSprite = nullptr;
 }
 
 ILcFont* LcDev_FontFind(int _nID)
@@ -196,9 +212,98 @@ int LcDev_FontOnResetDevice()
 }
 
 };// namespace glc
+
+static int InternalFontDrawText(const int nIdx
+			, const RECT& rct, const DWORD flags, const DWORD fontColor
+			, const char* format, va_list ap)
+{
+	glc::ILcFont* pFont{};
+	ID3DXFont* pDxFnt{};
+	pFont = glc::LcDev_FontFind(nIdx);
+	if(!pFont)
+		return -1;
+	pDxFnt = (ID3DXFont*)pFont->GetFont();
+	if(!pDxFnt)
+		return -1;
+	if(!format)
+		return -1;
+	std::string s= glc::FormatString(format, ap);
+	if(!s.length())
+		return -2;
+
+	auto sprite = glc::CLcFont::m_pLcSprite;
+	if(!sprite)
+		return -3;
+
+	RECT drawRect = rct;
+	if(flags & DT_NOCLIP)
+	{
+		// Position-only calls use the formatted text's actual font metrics.
+		// Measure in logical coordinates; the sprite applies screen scaling once.
+		const int height = pDxFnt->DrawTextA(nullptr, s.c_str(), -1, &drawRect,
+			(flags & ~DT_NOCLIP) | DT_CALCRECT, fontColor);
+		if(height == 0)
+			return 0;
+	}
+
+	// Allow extra space for italic overhang and font-specific glyph extents.
+	// Padding is in logical coordinates and scales together with the text.
+	TEXTMETRICA metrics{};
+	if(!pDxFnt->GetTextMetricsA(&metrics))
+		return -1;
+	drawRect.right += metrics.tmAveCharWidth * 2;
+	const LONG extraHeight = static_cast<LONG>(std::ceil(
+		static_cast<double>(metrics.tmHeight) * 0.12));
+	drawRect.bottom += extraHeight;
+
+	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	if(FAILED(hr))
+		return hr;
+	hr = sprite->SetTransform(&glc::CLcFont::m_tm);
+	int height = 0;
+	if(SUCCEEDED(hr))
+		height = pDxFnt->DrawTextA(sprite, s.c_str(), -1, &drawRect, flags, fontColor);
+	const HRESULT endHr = sprite->End();
+	if(FAILED(hr)) return hr;
+	if(FAILED(endHr)) return endHr;
+	return height;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 
+
+int g2_FontRegisterFile(CSTR fileName)
+{
+	if(!fileName || !*fileName)
+		return -1;
+	const std::wstring name = glc::ToWideString(fileName);
+	if(name.empty())
+		return -1;
+	const DWORD length = GetFullPathNameW(name.c_str(), 0, nullptr, nullptr);
+	if(!length)
+		return -1;
+	std::wstring path(length, L'\0');
+	const DWORD written = GetFullPathNameW(name.c_str(), length, path.data(), nullptr);
+	if(!written || written >= length)
+		return -1;
+	path.resize(written);
+	for(const auto& file : glc::m_vFontFiles)
+	{
+		if(_wcsicmp(file.path.c_str(), path.c_str()) == 0)
+			return file.count;
+	}
+
+	// Allocate the tracking entry first so successful registration cannot be untracked.
+	glc::m_vFontFiles.push_back({std::move(path), 0});
+	auto& file = glc::m_vFontFiles.back();
+	file.count = AddFontResourceExW(file.path.c_str(), FR_PRIVATE, nullptr);
+	if(file.count == 0)
+	{
+		glc::m_vFontFiles.pop_back();
+		return -1;
+	}
+	return file.count;
+}
 
 int g2_FontCreate(CSTR sName, long iH, long iItalic)
 {
@@ -212,35 +317,46 @@ int g2_FontCreate(CSTR sName, long iH, long iItalic)
 
 int g2_FontDrawText(const int nIdx, const RECT& rc, const DWORD fontColor, const char *format, ...)
 {
-	glc::ILcFont* pFont	{};
-	ID3DXFont*	pDxFnt	{};
-	pFont = glc::LcDev_FontFind(nIdx);
-	if(!pFont)
-		return -1;
-	pDxFnt = (ID3DXFont*)pFont->GetFont();
-	if(!pDxFnt)
-		return -1;
-	if(!format)
-		return -1;
+	RECT rct = rc;
 	va_list ap;
 	va_start(ap, format);
-	std::string s= glc::FormatString(format, ap);
+	int hr = InternalFontDrawText(nIdx, rct, 0, fontColor, format, ap);
 	va_end(ap);
-	if(!s.length())
-		return -2;
-
-	RECT rct = rc;
-	rct.right += 20;
-	auto sprite = glc::CLcFont::m_pLcSprite;
-	if(sprite)
-		sprite->Begin(D3DXSPRITE_ALPHABLEND);
-
-	sprite->SetTransform(&glc::CLcFont::m_tm);
-	int hr = pDxFnt->DrawText(sprite, s.c_str(), -1, &rct, 0, fontColor);
-	if(sprite)
-		sprite->End();
-
 	return hr;
+}
+
+int g2_FontDrawText(const int nIdx, const VEC2i& pos, const DWORD fontColor, const char *format, ...)
+{
+	// The internal helper measures width and height from this origin.
+	RECT rct = {pos.x, pos.y, pos.x, pos.y};
+	va_list ap;
+	va_start(ap, format);
+	int hr = InternalFontDrawText(nIdx, rct, DT_LEFT | DT_TOP | DT_NOCLIP, fontColor, format, ap);
+	va_end(ap);
+	return hr;
+}
+
+int g2_FontDrawText(int nIdx, std::initializer_list<LONG> coordinates,
+	DWORD fontColor, const char* format, ...)
+{
+	if(coordinates.size() != 2 && coordinates.size() != 4)
+		return -1;
+
+	const LONG* values = coordinates.begin();
+	RECT rect = {values[0], values[1], values[0], values[1]};
+	DWORD flags = DT_LEFT | DT_TOP | DT_NOCLIP;
+	if(coordinates.size() == 4)
+	{
+		rect.right = values[2];
+		rect.bottom = values[3];
+		flags = 0;
+	}
+
+	va_list ap;
+	va_start(ap, format);
+	const int result = InternalFontDrawText(nIdx, rect, flags, fontColor, format, ap);
+	va_end(ap);
+	return result;
 }
 
 //int g2_FontRelease(int _nID)

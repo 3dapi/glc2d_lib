@@ -24,6 +24,11 @@ interface	ILcTexture
 	virtual	void	GetImageRect(void* rc)=0;
 };
 
+// Internal draw path shared by registered textures and model-owned textures.
+int LcDev_TextureDraw(ILcTexture* texture, const RECT* rect,
+	const VEC2* position, const VEC2* scale, const VEC2* pivot,
+	float angle, DWORD color, int mono);
+
 int	LcDev_TextureCreate(ILcTexture** pData
 					, void* p1=NULL
 					, void* p2=NULL

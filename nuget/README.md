@@ -1,19 +1,27 @@
 # glc2d
 
-glc2d는 Visual C++용 2D 게임 라이브러리입니다.
+glc2d는 Windows / Visual C++용 2D 게임 라이브러리입니다. 이미지와 문자열 출력, 키보드·마우스 입력, 스프라이트 시트 애니메이션, WAV·MP3 재생을 제공합니다.
 
-## 프로젝트 설정
+이 문서는 현재 저장소의 `include/glc2d.h`와 구현을 기준으로 작성했습니다.
 
-NuGet 패키지를 설치한 후 프로젝트의 시작 `.cpp` 파일에 다음 코드를 추가합니다.
+## 1. 프로젝트 설정
+
+Visual Studio 2022의 Windows C++ 프로젝트에서 사용합니다. Win32와 x64, Debug와 Release 라이브러리를 제공합니다. 예제는 C++17 기준입니다.
+
+NuGet에서 다음 패키지를 설치합니다.
+
+- `glc2d`
+- `Microsoft.DXSDK.D3DX` — 저장소 예제는 `9.29.952.8`을 사용합니다.
+
+현재 `glc2d.nuspec`에는 D3DX 패키지 의존성이 선언되어 있지 않으므로 D3DX 패키지를 별도로 설치합니다. `glc2d.props`는 헤더와 라이브러리의 검색 경로를 추가합니다. 사용할 glc2d 라이브러리는 시작 `.cpp` 파일에서 다음과 같이 선택합니다.
 
 ```cpp
 #include <glc2d.h>
 
-// link the 2d game library
 #if defined(_DEBUG)
-    #if defined(_M_X64) // 64-bit 아키텍처
+    #if defined(_M_X64)
         #pragma comment(lib, "glc2d_x64_debug.lib")
-    #elif defined(_M_IX86) // 32-bit 아키텍처
+    #elif defined(_M_IX86)
         #pragma comment(lib, "glc2d_win32_debug.lib")
     #endif
 #else
@@ -25,485 +33,310 @@ NuGet 패키지를 설치한 후 프로젝트의 시작 `.cpp` 파일에 다음 
 #endif
 ```
 
+런타임 라이브러리는 Debug에서 `/MDd`, Release에서 `/MD`를 사용합니다. 실행 시 필요한 D3DX DLL도 실행 파일의 아키텍처와 구성에 맞아야 합니다. D3DX 패키지의 빌드 설정과 DLL 복사 설정을 유지합니다.
 
-# glc2d Manual
+## 2. 기본 실행과 화면 배율
 
-## 1. Start
-
-glc2d 프로그램의 기본 실행 순서는 다음과 같습니다.
-
-```text
-g2_InitSdk()
-        ↓
-g2_CreateWin()
-        ↓
-g2_Run()
-        ↓
-g2_DestroyWin()
-```
-
-가장 단순한 프로그램은 다음과 같이 작성할 수 있습니다.
+기본 실행 순서는 SDK 초기화 → 콜백 등록 → 창 생성 → 리소스 로드 → 실행 → 해제입니다. 아래 코드는 앞 절의 라이브러리 선택 코드와 함께 사용합니다.
 
 ```cpp
-#include "glc2d.h"
-#include <stdio.h>
+#include <glc2d.h>
 
-int main()
+int FrameMove()
 {
-    // SDK 초기화
-    g2_InitSdk();
-
-    printf("Starting ...\n\n");
-
-    // 윈도우 생성
-    g2_CreateWin(100, 100, 1024, 600, "My First Game Window");
-
-    // 실행
-    g2_Run();
-
-    // 윈도우 해제
-    g2_DestroyWin();
-
+    // 입력 확인과 게임 상태 갱신
     return 0;
 }
-```
-
-### 주요 함수
-
-| 함수 | 설명 |
-|---|---|
-| `g2_InitSdk()` | glc2d SDK를 초기화합니다. |
-| `g2_CreateWin(x, y, width, height, title)` | 지정한 위치와 크기로 윈도우를 생성합니다. |
-| `g2_Run()` | 메인 실행 루프를 시작합니다. |
-| `g2_DestroyWin()` | 생성한 윈도우를 해제합니다. |
-
-
-## 2. Texture
-
-이미지를 화면에 출력하려면 텍스처를 로드하고 Render 함수를 등록합니다.
-
-```cpp
-int nTx;
 
 int Render()
 {
-    VEC2 pos(400, 200);
-
-    g2_Draw2D(nTx, NULL, &pos);
-
+    // 이미지와 문자열 출력
     return 0;
 }
 
 int main()
 {
-    g2_InitSdk();
+    if (g2_InitSdk() < 0)
+        return 1;
 
-    // 배경색 설정
-    g2_SetClearColor(0xFF336699);
-
-    // 화면 출력 함수 등록
+    g2_SetFrameMove(FrameMove);
     g2_SetRender(Render);
+    g2_SetClearColor(0xFF006699);
 
-    g2_CreateWin(100, 100, 800, 600, "Texture");
+    // 논리 화면 800x600, 창 모드, 화면 배율 1.0
+    if (g2_CreateWin(100, 100, 800, 600, "2D Game", true, 1.0F) < 0)
+        return 1;
 
-    // 텍스처 로드
-    nTx = g2_TextureLoad("Texture/tst.png");
-
+    // Texture, Font, Sound 리소스는 창 생성 후 로드합니다.
     g2_Run();
-
-    // 텍스처 해제
-    g2_TextureRelease(nTx);
-
     g2_DestroyWin();
-
     return 0;
 }
 ```
 
-### 텍스처 로드
+`g2_CreateWin()`의 선언은 다음과 같습니다.
 
 ```cpp
-int nTx = g2_TextureLoad("Texture/tst.png");
+int g2_CreateWin(int x, int y, int ScnW, int ScnH,
+                CSTR sName, bool bWindowed = true, float scnScale = 1.0F);
 ```
 
-`g2_TextureLoad()`는 로드한 텍스처의 인덱스를 반환합니다. 이후 그 값을 `g2_Draw2D()`에 전달하여 이미지를 출력합니다.
-
-### 이미지 출력
+여섯 번째 인자 `bWindowed`는 **`true`가 창 모드, `false`가 전체 화면 모드**입니다. `g2_SetWindowMode()`도 같은 방향으로 모드 변경을 요청하며 실제 변경은 게임 루프에서 처리합니다.
 
 ```cpp
-VEC2 pos(400, 200);
-g2_Draw2D(nTx, NULL, &pos);
+g2_SetWindowMode(true);   // 창 모드로 변경 요청
+g2_SetWindowMode(false);  // 전체 화면 모드로 변경 요청
 ```
 
-두 번째 인자에 `NULL`을 지정하면 텍스처 전체를 사용합니다.
+`ScnW`, `ScnH`는 게임의 논리 화면 크기입니다. `scnScale`을 `1.5F`로 지정하면 이미지와 문자열을 1.5배로 출력하며, 창의 클라이언트 크기도 논리 크기의 1.5배로 생성합니다. 마우스 좌표는 이 배율로 나눈 논리 좌표로 반환됩니다. `scnScale`은 라이브러리의 출력 배율이며 Windows 디스플레이 배율을 자동으로 감지하는 옵션은 아닙니다.
 
-### 알파 옵션
+| 함수 | 설명 |
+|---|---|
+| `g2_GetScnW()`, `g2_GetScnH()` | 논리 화면의 폭과 높이 |
+| `g2_GetScnScale()` | 생성 시 지정한 화면 배율 |
+| `g2_GetWindowMode()` | 창 모드이면 `true`, 전체 화면이면 `false` |
+| `g2_GetHwnd()` | 창 핸들 |
+| `g2_SetWindowTitle(format, ...)` | 창 제목 변경 |
+| `g2_SetClearColor(color)` | 배경색 변경 |
 
-예제에서는 다음과 같이 알파 옵션을 켜고 이미지를 출력한 뒤 다시 끕니다.
+파일 경로는 실행 프로그램의 현재 작업 디렉터리를 기준으로 해석합니다. 예제의 `Texture/`, `sound/` 폴더가 해당 위치에서 접근 가능해야 합니다.
+
+## 3. 이미지 출력
+
+창 생성 후 텍스처를 로드하고, 등록한 `Render()`에서 출력합니다.
+
+```cpp
+// 창 생성 후
+int texture = g2_TextureLoad("Texture/tst.png");
+
+// Render() 안에서
+VEC2 position(400, 200);
+g2_Draw2D(texture, nullptr, &position);
+```
+
+로드 실패 시 `g2_TextureLoad()`는 `-1`을 반환합니다. 두 번째 인자가 `nullptr`이면 원본 이미지 전체를 사용합니다. 색상 키의 기본값은 `0x00FFFFFF`이며 흰색을 투명 처리합니다. PNG의 알파만 사용하고 색상 키를 끄려면 두 번째 인자로 `0`을 지정합니다.
+
+```cpp
+int texture = g2_TextureLoad("Texture/player.png", 0);
+int width = g2_TextureWidth(texture);
+int height = g2_TextureHeight(texture);
+```
+
+이미지 일부와 배율을 지정하려면 다음과 같이 사용합니다. 원본 영역의 `right`, `bottom`은 폭·높이가 아닌 좌표입니다.
+
+```cpp
+RECT source{0, 0, 32, 32};
+VEC2 position(100, 100);
+VEC2 scale(2, 2);
+g2_Draw2D(texture, &source, &position, &scale);
+```
+
+음수 배율은 이미지를 반전합니다. 출력 시작 위치를 기준으로 양의 폭·높이를 차지합니다.
+
+```cpp
+VEC2 flip(-1, 1);
+g2_Draw2D(texture, nullptr, &position, &flip);
+```
+
+색상은 `0xAARRGGBB`입니다. 기본값 `0xFFFFFFFF`는 원래 색상과 알파를 유지합니다. 마지막 인자의 `bMono`가 참이면 이미지 RGB 대신 지정 색상을 사용하고 이미지 알파를 유지합니다.
+
+```cpp
+g2_Draw2D(texture, nullptr, &position, nullptr, nullptr,
+          0.0F, 0x80FFFFFF);       // 반투명
+
+g2_Draw2D(texture, nullptr, &position, nullptr, nullptr,
+          0.0F, 0xFFFF0000, true); // 빨간색 실루엣
+```
+
+회전은 다섯 번째 인자에 회전 중심을 지정하고 여섯 번째 인자에 라디안 각도를 전달합니다. 현재 구현의 회전 중심은 화면 배율이 적용된 백 버퍼 좌표이며, 각도는 내부에서 부호를 반전해 적용합니다. 회전 중심이 `nullptr`이면 각도는 적용하지 않습니다.
+
+`g2_DrawAlphaOption(0)`은 일반적인 원본 알파 블렌딩입니다. `1`은 목적지 알파를 사용하는 별도 블렌딩 방식이며, 알파 사용 여부를 켜고 끄는 옵션이 아닙니다. 설정은 다음 변경까지 유지됩니다.
 
 ```cpp
 g2_DrawAlphaOption(1);
-g2_Draw2D(nTx, NULL, &pos);
+g2_Draw2D(texture, nullptr, &position);
 g2_DrawAlphaOption(0);
 ```
 
-### 이미지 크기 얻기
+필요 없어진 텍스처는 `g2_TextureRelease(texture)`로 해제합니다. 남아 있는 텍스처는 `g2_DestroyWin()`에서 해제됩니다.
+
+## 4. 키보드와 마우스
+
+입력 상태는 라이브러리가 갱신한 뒤 `FrameMove()` 콜백에 전달됩니다. 키보드와 마우스 상태는 단순한 참·거짓이 아니라 다음 이벤트 값입니다.
+
+| 값 | 의미 |
+|---|---|
+| `EINPUT_NONE` | 입력 없음 |
+| `EINPUT_DOWN` | 누르기 시작 |
+| `EINPUT_UP` | 버튼이나 키를 뗌 |
+| `EINPUT_PRESS` | 누른 상태 유지 |
+| `EINPUT_DBCLC` | 마우스 더블 클릭 |
+
+`if (keys[VK_SPACE])`처럼 검사하면 키를 뗀 `EINPUT_UP`도 참이 됩니다. 한 번 실행할 동작은 `EINPUT_DOWN`, 지속적인 이동은 `EINPUT_DOWN`과 `EINPUT_PRESS`를 검사합니다.
 
 ```cpp
-int width  = g2_TextureWidth(nTx);
-int height = g2_TextureHeight(nTx);
-```
-
-텍스처의 폭과 높이는 `g2_TextureWidth()`와 `g2_TextureHeight()`로 얻을 수 있습니다.
-
-
-## 3. Mouse
-
-마우스 입력은 FrameMove 함수에서 갱신하는 방식으로 사용할 수 있습니다.
-
-```cpp
-int mouseX = 0;
-int mouseY = 0;
-int mouseZ = 0;
-
 int FrameMove()
 {
-    mouseX = g2_GetMouseX();
-    mouseY = g2_GetMouseY();
-    mouseZ = g2_GetMouseZ();
+    const KEYCODE* keys = g2_GetKeyboard();
 
-    g2_SetWindowTitle("%d %d %d", mouseX, mouseY, mouseZ);
+    if (keys[VK_SPACE] == EINPUT_DOWN)
+        g2_SetWindowMode(!g2_GetWindowMode());
 
+    if (keys[VK_LEFT] == EINPUT_DOWN || keys[VK_LEFT] == EINPUT_PRESS)
+    {
+        // 왼쪽으로 이동
+    }
+
+    if (g2_GetMouseEvent(1) == EINPUT_DOWN)
+    {
+        // 오른쪽 마우스 버튼을 누르기 시작함
+    }
+
+    g2_SetWindowTitle("Mouse: %d, %d", g2_GetMouseX(), g2_GetMouseY());
     return 0;
 }
 ```
 
-FrameMove 함수는 프로그램 시작 시 등록합니다.
+마우스 버튼 번호는 왼쪽 `0`, 오른쪽 `1`, 가운데 `2`입니다. 좌표는 `g2_GetMouseX()`, `g2_GetMouseY()` 또는 `g2_GetMouse()`로 얻습니다. `g2_GetMouseZ()`는 휠 상태 값입니다.
+
+## 5. 스프라이트 시트 애니메이션
+
+시간에 따라 원본 이미지의 영역을 바꾸면 프레임 애니메이션을 만들 수 있습니다. 다음 예는 폭 50, 높이 64의 프레임 18개가 가로로 배치된 시트입니다.
 
 ```cpp
-g2_SetFrameMove(FrameMove);
+const int frameWidth = 50;
+const int frameHeight = 64;
+const int frameCount = 18;
+const long long frameDurationMs = 120;
+
+int frame = int((g2_TimeGetTime() / frameDurationMs) % frameCount);
+RECT source{frame * frameWidth, 0, (frame + 1) * frameWidth, frameHeight};
+VEC2 position(100, 100);
+VEC2 scale(2, 2);
+g2_Draw2D(texture, &source, &position, &scale);
 ```
 
-### 마우스 위치에 이미지 출력
+`g2_TimeGetTime()`는 라이브러리의 시간 기준점으로부터 경과한 밀리초를 반환합니다. 이미지 출력에는 `D3DXSprite`를 사용하며, 사용자 코드에서 별도의 스프라이트 객체를 생성할 필요는 없습니다.
+
+## 6. 문자열 출력
+
+창 생성 후 시스템에 설치된 글꼴 또는 프로그램에서 등록한 글꼴의 이름으로 글꼴을 만듭니다. 두 번째 인자는 논리 좌표 기준 높이, 세 번째 인자는 이탤릭 여부입니다.
 
 ```cpp
-int Render()
+int font = g2_FontCreate("굴림", 20);
+int italicFont = g2_FontCreate("Arial", 25, 1);
+```
+
+폴더에 있는 `.ttf` 파일은 `g2_FontRegisterFile()`로 먼저 등록합니다. 반환값은 등록된 글꼴 수이며 실패하면 `-1`입니다. 같은 절대 경로의 파일을 다시 요청하면 중복 등록하지 않고 기존 등록 결과를 반환합니다. 파일 경로는 UTF-8을 우선 해석하고, 유효한 UTF-8이 아니면 ANSI 코드 페이지로 해석합니다.
+
+```cpp
+if (g2_FontRegisterFile("Font/MyGameFont.ttf") > 0)
 {
-    VEC2 pos(mouseX, mouseY);
-
-    g2_Draw2D(nTx, NULL, &pos);
-
-    return 0;
+    // 파일명이 아니라 폰트 파일 내부의 글꼴 이름을 사용합니다.
+    int gameFont = g2_FontCreate("My Game Font", 24);
 }
 ```
 
-마우스 좌표를 이미지 위치로 사용하면 이미지가 마우스를 따라 움직이게 만들 수 있습니다.
+`Font/MyGameFont.ttf`와 `My Game Font`는 예시입니다. 등록은 `g2_FontCreate()` 전에 해야 합니다. 등록된 파일은 현재 프로그램에서만 사용할 수 있으며 시스템에 영구 설치되지 않습니다. 엔진이 `g2_DestroyWin()`에서 모든 폰트 객체를 해제한 뒤 파일 등록도 자동으로 해제하므로 사용자가 등록 해제 함수를 호출할 필요는 없습니다.
 
-### 주요 함수
+`Render()`에서 시작 위치만 지정하면 문자열 전체를 출력할 수 있습니다.
+
+```cpp
+g2_FontDrawText(font, {10, 10}, 0xFFFFFF00, "마우스의 오른쪽 버튼 클릭");
+g2_FontDrawText(font, {10, 40}, 0xFFFFFFFF,
+                "Mouse: %d, %d", g2_GetMouseX(), g2_GetMouseY());
+```
+
+중괄호 안의 값이 **2개이면 시작 위치**, **4개이면 출력 영역**입니다. 다른 개수는 `-1`을 반환합니다. 명시적인 `VEC2i`와 `RECT`도 지원합니다.
+
+```cpp
+VEC2i position{10, 10};
+g2_FontDrawText(font, position, 0xFFFFFFFF, "위치 지정");
+
+RECT region{10, 80, 400, 120};
+g2_FontDrawText(font, region, 0xFFFFFFFF, "영역 지정");
+g2_FontDrawText(font, {10, 130, 400, 170}, 0xFFFFFFFF, "중괄호 영역");
+```
+
+위치 호출은 포맷팅된 문자열을 실제 폰트로 측정하고, 영역에 의한 잘림 없이 출력합니다. 영역 호출은 지정한 영역을 기준으로 출력하며 경계에서 잘릴 수 있습니다. 두 방식 모두 자동 줄바꿈을 사용하지 않으며 `\n`은 줄바꿈으로 처리합니다. 영역 크기에 맞춰 글꼴을 자동으로 확대·축소하지 않습니다.
+
+이탤릭과 폰트별 돌출을 고려하여 출력 영역 오른쪽에 평균 글자 폭 두 개, 아래쪽에 한 줄 높이의 12%를 올림한 여유를 추가합니다. 영역 호출의 실제 오른쪽·아래쪽 경계는 이 여유만큼 늘어납니다. 화면 배율은 문자열과 여유 영역에 함께 적용됩니다.
+
+반환값은 성공 시 문자열 출력 높이의 논리 단위 값입니다. 화면 배율을 곱한 픽셀 높이가 아닙니다. 빈 문자열은 `-2`, 잘못된 글꼴 ID 또는 인자는 `-1`, 실제 출력 실패는 `0` 또는 오류값을 반환할 수 있습니다.
+
+현재 문자열 API는 `DrawTextA`를 사용하는 좁은 문자열 API입니다. 한글 문자열의 인코딩은 실행 환경의 ANSI 코드 페이지에 맞춰야 합니다. UTF-8 바이트를 전달한다고 자동으로 UTF-8로 해석하지는 않습니다.
+
+생성한 글꼴은 `g2_DestroyWin()`에서 해제됩니다.
+
+## 7. WAV와 MP3
+
+창 생성 후 사운드를 로드합니다. WAV는 DirectSound, MP3는 Media Foundation을 사용합니다. 현재 지원하는 확장자는 `.wav`, `.mp3`입니다.
+
+```cpp
+int effect = g2_SoundLoad("sound/bounce.wav");
+int bgm = g2_SoundLoad("sound/bgm.mp3");
+
+g2_SoundPlay(effect);     // 한 번 재생
+g2_SoundPlay(bgm, true);  // 반복 재생
+```
+
+재생 상태 확인 함수의 이름은 **`g2_SoundIsPlaying()`**입니다.
+
+```cpp
+if (!g2_SoundIsPlaying(effect))
+{
+    g2_SoundReset(effect);
+    g2_SoundPlay(effect);
+}
+```
+
+게임에서 이 코드를 매 프레임 실행하면 재생이 끝날 때마다 다시 시작합니다. 효과음을 특정 입력에 연결하려면 입력 조건도 함께 검사합니다.
+
+```cpp
+const KEYCODE* keys = g2_GetKeyboard();
+if (keys[VK_SPACE] == EINPUT_DOWN && !g2_SoundIsPlaying(effect))
+{
+    g2_SoundReset(effect);
+    g2_SoundPlay(effect);
+}
+```
 
 | 함수 | 설명 |
 |---|---|
-| `g2_GetMouseX()` | 현재 마우스 X 좌표를 얻습니다. |
-| `g2_GetMouseY()` | 현재 마우스 Y 좌표를 얻습니다. |
-| `g2_GetMouseZ()` | 현재 마우스 Z 값을 얻습니다. |
-| `g2_GetMouseEvent(index)` | 지정한 마우스 이벤트 상태를 확인합니다. |
-| `g2_SetWindowTitle(...)` | 윈도우 제목 문자열을 변경합니다. |
+| `g2_SoundLoad(path)` | 로드한 사운드 ID 반환, 실패 시 `-1` |
+| `g2_SoundPlay(id, loop)` | 재생, `loop`의 기본값은 `false` |
+| `g2_SoundIsPlaying(id)` | 재생 중인지 확인 |
+| `g2_SoundStop(id)` | 재생 중지 |
+| `g2_SoundReset(id)` | 재생 위치를 시작점으로 이동 |
+| `g2_SoundRelease(id)` | 사운드 해제 |
 
-오른쪽 마우스 버튼 입력을 확인하는 예는 다음과 같습니다.
+남아 있는 사운드는 `g2_DestroyWin()`에서 해제됩니다.
 
-```cpp
-if (g2_GetMouseEvent(1))
-{
-    // Right Button
-}
-```
+## 8. WinAPI 리소스 아이콘
 
-
-## 4. Keyboard
-
-키보드 상태는 `g2_GetKeyboard()`를 통해 얻습니다.
-
-```cpp
-const KEYCODE* pKeyboard = g2_GetKeyboard();
-```
-
-반환된 포인터를 키 코드로 인덱싱하여 현재 키 상태를 확인합니다.
-
-```cpp
-for (int i = 9; i < 128; ++i)
-{
-    if (pKeyboard[i])
-    {
-        printf("You Pressed %d key!!!\n", i);
-    }
-}
-```
-
-WinAPI 가상 키 코드를 사용할 수도 있습니다.
-
-```cpp
-const KEYCODE* pKey = g2_GetKeyboard();
-
-if (pKey[VK_SPACE])
-{
-    g2_ChangeWindow();
-}
-```
-
-또는 방향키를 다음과 같이 검사할 수 있습니다.
-
-```cpp
-if (pKey[VK_LEFT])
-{
-    // Left Key
-}
-
-if (pKey[VK_RIGHT])
-{
-    // Right Key
-}
-```
-
-
-## 5. Sprite Animation
-
-스프라이트 시트는 전체 이미지 중 현재 프레임에 해당하는 영역을 `RECT`로 지정하여 출력합니다.
-
-예제에서는 한 프레임의 폭과 전체 프레임 수를 다음과 같이 설정합니다.
-
-```cpp
-int   g_AniTex;
-int   g_AniImgW;
-int   g_AniImgH;
-RECT  g_AniRc;
-
-int   g_AniW = 50;
-int   g_AniMaxF = 18;
-FLOAT g_AniSpeed = 120;
-```
-
-### 현재 프레임 계산
-
-```cpp
-long long currentTime = g2_TimeGetTime();
-
-int frameIndex = int(currentTime / g_AniSpeed);
-frameIndex %= g_AniMaxF;
-```
-
-현재 시간을 프레임 속도로 나눈 뒤 전체 프레임 수로 나머지 연산을 하여 반복 애니메이션을 만듭니다.
-
-### 출력 영역 계산
-
-```cpp
-g_AniRc.left   = (frameIndex + 0) * g_AniW;
-g_AniRc.right  = (frameIndex + 1) * g_AniW;
-g_AniRc.top    = 0;
-g_AniRc.bottom = g_AniImgH;
-```
-
-현재 프레임에 해당하는 스프라이트 시트 영역을 계산합니다.
-
-### 애니메이션 출력
-
-```cpp
-VEC2 mousePos(g_mouseX, g_mouseY);
-
-g2_Draw2D(g_AniTex, &g_AniRc, &mousePos, &VEC2(2, 2) );
-```
-
-`g2_Draw2D()`에 원본 영역 `RECT`, 출력 위치, 크기 배율을 전달하여 현재 프레임을 화면에 출력합니다.
-
-스프라이트 애니메이션은 별도의 애니메이션 객체를 사용하는 방식이 아니라, 시간에 따라 출력할 `RECT` 영역을 변경하는 방식으로 구성할 수 있습니다.
-
-
-## 6. 한글 문자열 출력
-
-문자열을 출력하려면 먼저 글꼴을 생성합니다.
-
-```cpp
-int nFont1 = g2_FontCreate("굴림", 20, 0);
-int nFont2 = g2_FontCreate("Arial", 25, 1);
-int nFont3 = g2_FontCreate("궁서", 20, 1);
-```
-
-한글 글꼴 이름을 지정하여 한글 문자열을 출력할 수 있습니다.
-
-### 문자열 출력
-
-```cpp
-g2_FontDrawText(nFont2, {10, 10, 500, 40}, 0xFFFFFF00, "출력할 메시지");
-```
-
-`g2_FontDrawText()`는 출력 영역과 색상을 지정할 수 있으며, `printf`와 비슷하게 값을 포함한 문자열도 출력할 수 있습니다.
-
-```cpp
-g2_FontDrawText(nFont3, {mouseX, mouseY, mouseX + 500, mouseY + 40}, 0xFFFFAAFF, "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ );
-```
-
-### 기본 사용 형태
-
-```cpp
-g2_FontDrawText(font, {left, top, right, bottom}, color, format, ...);
-```
-
-
-## 7. WinAPI Resource 활용
-
-WinAPI Resource에 등록한 아이콘을 glc2d 윈도우에 사용할 수 있습니다.
-
-먼저 Resource에서 생성된 헤더를 포함합니다.
+Visual Studio 리소스에 아이콘을 등록하고 생성된 `resource.h`의 ID를 사용합니다. 창 생성 전에 SDK 초기화와 아이콘 설정을 순서대로 호출합니다.
 
 ```cpp
 #include "resource.h"
-```
 
-예제에서는 `IDI_MAIN_ICON` Resource ID를 윈도우 아이콘으로 지정합니다.
-
-```cpp
 g2_InitSdk();
-
-// 아이콘 설정
 g2_SetWindowIcon(IDI_MAIN_ICON);
-
-g2_CreateWin(100, 100, 800, 600, "Resource", false);
+g2_CreateWin(100, 100, 800, 600, "Resource", true);
 ```
 
-`g2_SetWindowIcon()`은 윈도우 생성 전에 호출합니다.
+`IDI_MAIN_ICON`은 각 프로젝트의 리소스 ID입니다. `resource.h`와 아이콘 리소스가 없는 프로젝트에서는 이 예를 그대로 사용할 수 없습니다.
 
-```cpp
-g2_SetWindowIcon(IDI_MAIN_ICON);
-```
+## 9. 예제와 패키지 구성
 
-업로드된 예제에서는 WinAPI Resource의 아이콘 사용만 확인할 수 있습니다. `resource.h`와 `IDI_MAIN_ICON`은 Visual Studio 프로젝트의 Resource 설정에서 생성된 값을 사용해야 합니다.
+저장소의 `example/`에는 기본 실행, 이미지, 마우스, 키보드, 애니메이션, 문자열, 아이콘, 사운드 및 게임 예제가 있습니다. `app_nuget/`에는 패키지를 사용하는 프로젝트가 있습니다.
 
-### 윈도우 모드 변경
+`nuget/glc2d.nuspec`은 다음 파일을 패키지에 포함합니다.
 
-같은 예제에서는 Space 키로 윈도우 모드를 변경합니다.
-
-```cpp
-const KEYCODE* pKey = g2_GetKeyboard();
-
-if (pKey[VK_SPACE])
-{
-    g2_ChangeWindow(true/false);
-}
-```
-
-
-## 8. Sound
-
-사운드는 파일을 로드하여 얻은 사운드 인덱스로 제어합니다.
-
-```cpp
-int nSound1;
-int nSound2;
-
-nSound1 = g2_SoundLoad("sound/bounce.wav");
-nSound2 = g2_SoundLoad("sound/move3.wav");
-```
-
-예제에서는 WAV 파일을 사용합니다.
-
-### 사운드 재생
-
-```cpp
-g2_SoundPlay(nSound1);
-// looping
-g2_SoundPlay(nBgm, true);
-```
-
-### 재생 상태 확인
-
-```cpp
-if (!g2_SoundIsPlaying(nSound1))
-{
-    g2_SoundReset(nSound1);
-    g2_SoundPlay(nSound1);
-}
-```
-
-이미 재생 중이지 않을 때만 사운드를 처음 위치로 되돌린 후 재생합니다.
-
-### 키보드와 사운드 연결
-
-```cpp
-const KEYCODE* pKey = g2_GetKeyboard();
-
-if (pKey[VK_LEFT] && !g2_SoundIsPlaying(nSound1))
-{
-    g2_SoundReset(nSound1);
-    g2_SoundPlay(nSound1);
-}
-
-if (pKey[VK_RIGHT] && !g2_SoundIsPlaying(nSound2))
-{
-    g2_SoundReset(nSound2);
-    g2_SoundPlay(nSound2);
-}
-```
-
-### 주요 함수
-
-| 함수 | 설명 |
+| 원본 | 패키지 경로 |
 |---|---|
-| `g2_SoundLoad(path)` | 사운드 파일을 로드합니다. |
-| `g2_SoundPlay(index)` | 사운드를 재생합니다. |
-| `g2_SoundReset(index)` | 사운드 재생 위치를 초기화합니다. |
-| `g2_SoundIsPlaying(index)` | 현재 사운드가 재생 중인지 확인합니다. |
+| `include/` | `build/native/include/` |
+| `lib/` | `build/native/lib/` |
+| `nuget/build/native/glc2d.props` | `build/native/glc2d.props` |
+| `nuget/README.md` | `README.md` |
 
-
-# 기본 프로그램 구성
-
-여러 기능을 함께 사용할 때는 일반적으로 Render와 FrameMove를 등록하여 프로그램을 구성합니다.
-
-```cpp
-int FrameMove()
-{
-    // 입력 및 게임 상태 갱신
-
-    return 0;
-}
-
-int Render()
-{
-    // 화면 출력
-
-    return 0;
-}
-
-int main()
-{
-    g2_InitSdk();
-
-    g2_SetClearColor(0xFF006699);
-
-    g2_SetRender(Render);
-    g2_SetFrameMove(FrameMove);
-
-    g2_CreateWin(100, 100, 800, 600, "2D Game");
-
-    // Texture, Font, Sound 등의 리소스 로드
-
-    g2_Run();
-
-    g2_DestroyWin();
-
-    return 0;
-}
-```
-
-각 함수의 역할은 다음과 같이 구분할 수 있습니다.
-
-```text
-FrameMove()
-  └─ Mouse
-  └─ Keyboard
-  └─ Animation Frame
-  └─ Game State Update
-
-Render()
-  └─ Texture
-  └─ Sprite
-  └─ String
-```
+패키지를 갱신할 때는 네 구성의 라이브러리와 공개 헤더를 함께 갱신합니다.

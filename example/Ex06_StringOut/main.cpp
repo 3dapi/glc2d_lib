@@ -50,9 +50,13 @@ int main()
 	iImgW1	= g2_TextureWidth(nTx1);
 	iImgH1	= g2_TextureHeight(nTx1);
 
-	nFont1 = g2_FontCreate("굴림", 20, 0);
-	nFont2 = g2_FontCreate("Arial", 25, 1);
-	nFont3 = g2_FontCreate("궁서", 20, 1);
+	g2_FontRegisterFile("Font/nanum_pen.ttf");
+	g2_FontRegisterFile("Font/NEXON Lv2 Gothic Bold.ttf");
+	g2_FontRegisterFile("Font/netmarbleM.ttf");
+	
+	nFont1 = g2_FontCreate("넥슨Lv2고딕 Bold", 20, 0);
+	nFont2 = g2_FontCreate("netmarble Medium", 25, 0);
+	nFont3 = g2_FontCreate("나눔손글씨 펜", 40, 1);
 
 	g2_Run();
 
@@ -75,11 +79,11 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 	g2_Draw2D(nTx1, &rt1);
-	g2_FontDrawText(nFont2, {10, 10, 500, 40}, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
+	g2_FontDrawText(nFont2, {10, 10}, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
 
 	if( g2_GetMouseEvent(1))		// R button
 	{
-		int c= g2_FontDrawText(nFont3, {mouseX, mouseY, mouseX+500, mouseY+ 40}, 0xffffaaff , "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
+		int c= g2_FontDrawText(nFont3, {mouseX, mouseY}, 0xffffaaff , "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
 	}
 
 	return 0;

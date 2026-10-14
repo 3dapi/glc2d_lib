@@ -18,7 +18,6 @@
 #include "ILcInput.h"
 #include "ILcFont.h"
 #include "ILcTexture.h"
-#include "ILcSpriteX.h"
 #include "ILcSound.h"
 #include "ILcModel.h"
 
@@ -63,9 +62,10 @@ LPDIRECT3D9				m_pD3D			{};			// D3D
 D3DPRESENT_PARAMETERS	m_d3dppWin		{};
 D3DPRESENT_PARAMETERS	m_d3dppFull		{};
 LPDIRECT3DDEVICE9		m_pd3dDevice	{};		// Device
-ILcSpriteX*				m_pLcSprite		{};		// 2D Sprite
-LPD3DXSPRITE			m_pd3dSprite	{};		// DX Sprite for font draw
+LPD3DXSPRITE			m_pd3dSprite	{};		// Shared sprite for images and fonts
 D3DXMATRIX				m_tmSprite	{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};	
+
+int m_nAlphaMethod{};
 
 int (*g2_FrameMove2D)();
 int (*g2_Render2D)();
@@ -185,26 +185,82 @@ int g2_Draw2D(const int _nID
 			, const int	bMono
 			)
 {
-	int	hr=-1;
+	return glc::LcDev_TextureDraw(glc::LcDev_TextureFind(_nID), pRct, pTrn, pScl, pRot, fRad, dC, bMono);
+}
 
-	glc::ILcTexture* pTex = glc::LcDev_TextureFind(_nID);
-	if(!pTex)
+int glc::LcDev_TextureDraw(ILcTexture* texture, const RECT* pRct,
+	const VEC2* pTrn, const VEC2* pScl, const VEC2* pRot,
+	float fRad, DWORD dC, int bMono)
+{
+	if(!texture)
+		return 0;
+	auto sprite = glc::m_pd3dSprite;
+	auto device = glc::m_pd3dDevice;
+	auto dxTexture = static_cast<LPDIRECT3DTEXTURE9>(texture->GetTexture());
+	if(!sprite || !device)
+		return D3DERR_INVALIDCALL;
+	if(!dxTexture)
 		return 0;
 
+	RECT rect = {0, 0, texture->GetImageWidth(), texture->GetImageHeight()};
+	if(pRct)
+		rect = *pRct;
+	if(rect.left < 0) rect.left = 0;
+	if(rect.top < 0) rect.top = 0;
+	if(rect.right > texture->GetImageWidth()) rect.right = texture->GetImageWidth();
+	if(rect.bottom > texture->GetImageHeight()) rect.bottom = texture->GetImageHeight();
+	if(rect.left >= rect.right || rect.top >= rect.bottom)
+		return 0;
 
-	hr = glc::m_pLcSprite->Begin();
-	hr = glc::m_pLcSprite->DrawEx(pTex, pRct, pScl, pTrn, pRot, fRad, dC, bMono);
-	glc::m_pLcSprite->End();
+	const VEC2 scale = pScl ? *pScl : VEC2(1, 1);
+	const VEC2 position = pTrn ? *pTrn : VEC2(0, 0);
+	D3DXMATRIX scaling, translation, transform;
+	D3DXMatrixScaling(&scaling, scale.x, scale.y, 1.0F);
+	// Negative scales flip within the positive extent, as in the old renderer.
+	const float x = position.x - (scale.x < 0 ? (rect.right - rect.left) * scale.x : 0);
+	const float y = position.y - (scale.y < 0 ? (rect.bottom - rect.top) * scale.y : 0);
+	D3DXMatrixTranslation(&translation, x, y, 0.0F);
+	transform = scaling * translation * glc::m_tmSprite;
+	if(pRot)
+	{
+		// Preserve the existing pivot in back-buffer coordinates and angle sign.
+		D3DXMATRIX toOrigin, rotation, fromOrigin;
+		D3DXMatrixTranslation(&toOrigin, -pRot->x, -pRot->y, 0.0F);
+		D3DXMatrixRotationZ(&rotation, -fRad);
+		D3DXMatrixTranslation(&fromOrigin, pRot->x, pRot->y, 0.0F);
+		transform = transform * toOrigin * rotation * fromOrigin;
+	}
 
-	return hr;
+	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	if(FAILED(hr))
+		return hr;
+	hr = sprite->SetTransform(&transform);
+	if(SUCCEEDED(hr))
+		hr = device->SetRenderState(D3DRS_DESTBLEND,
+			glc::m_nAlphaMethod == 1 ? D3DBLEND_DESTALPHA : D3DBLEND_INVSRCALPHA);
+	if(SUCCEEDED(hr))
+		hr = device->SetSamplerState(0, D3DSAMP_MAGFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_POINT);
+	if(SUCCEEDED(hr))
+		hr = device->SetSamplerState(0, D3DSAMP_MINFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_POINT);
+	if(SUCCEEDED(hr))
+		hr = device->SetSamplerState(0, D3DSAMP_MIPFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_NONE);
+	// Use diffuse RGB for silhouettes while retaining texture alpha modulation.
+	if(SUCCEEDED(hr) && bMono)
+		hr = device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+	if(SUCCEEDED(hr))
+		hr = sprite->Draw(dxTexture, &rect, nullptr, nullptr, dC);
+	const HRESULT endHr = sprite->End();
+	const HRESULT restoreHr = sprite->SetTransform(&glc::m_tmSprite);
+	if(FAILED(hr)) return hr;
+	if(FAILED(endHr)) return endHr;
+	return restoreHr;
 }
 
 int g2_DrawAlphaOption(int nAlphaMethod)
 {
-	if(!glc::m_pLcSprite)
+	if(!glc::m_pd3dSprite)
 		return -1;
-
-	glc::m_pLcSprite->AlphaOption(nAlphaMethod);
+	glc::m_nAlphaMethod = nAlphaMethod;
 	return 0;
 }
 
@@ -319,7 +375,7 @@ int g2_InitSdk()
 	return 0;
 }
 
-int g2_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bFull, float scnScale)
+int g2_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bWindowed, float scnScale)
 {
 	strcpy(glc::m_sCls, sName);
 
@@ -328,7 +384,7 @@ int g2_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bFull, float
 	glc::m_scnSize.cx = ScnW;
 	glc::m_scnSize.cy = ScnH;
 	glc::m_scnScale = scnScale;
-	g2_ChangeWindow(bFull);
+	g2_SetWindowMode(bWindowed);
 
 	glc::m_hInst =(HINSTANCE)GetModuleHandle(NULL);
 
@@ -368,14 +424,6 @@ int g2_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bFull, float
 		return -1;
 
 	// DX의 스프라이트는 디바이스가 생성된 후에 만들어야 한다.
-	if(FAILED(glc::LcDev_SpriteCreate(&glc::m_pLcSprite, glc::m_pd3dDevice)))
-	{
-		glc::m_pd3dDevice->Release();
-		glc::m_pD3D->Release();
-		return -1;
-	}
-
-	// DX의 스프라이트는 디바이스가 생성된 후에 만들어야 한다.
 	if(FAILED(D3DXCreateSprite(glc::m_pd3dDevice, &glc::m_pd3dSprite)))
 	{
 		glc::m_pd3dDevice->Release();
@@ -387,18 +435,20 @@ int g2_CreateWin(int x, int y, int ScnW, int ScnH, CSTR sName, bool bFull, float
 		return -1;
 
 	D3DXMatrixScaling(&glc::m_tmSprite, scnScale, scnScale, 1.0F);
+	glc::m_pd3dSprite->SetTransform(&glc::m_tmSprite);
+	glc::m_nAlphaMethod = 0;
 	glc::LcDev_FontInit(glc::m_pd3dDevice, glc::m_pd3dSprite, &glc::m_tmSprite);
 	glc::LcDev_TextureInit(glc::m_pd3dDevice);
 	glc::LcDev_SoundInit(glc::m_hWnd);
-	glc::LcDev_ModelInit(glc::m_pLcSprite);
+	glc::LcDev_ModelInit();
 
 	return 0;
 }
 
-int g2_ChangeWindow(bool bWindow)
+int g2_SetWindowMode(bool bWindowed)
 {
 	glc::m_bToggledEvent = true;
-	glc::m_bToggledWin = bWindow;
+	glc::m_bToggledWin = bWindowed;
 
 	return S_OK;
 }
@@ -413,7 +463,6 @@ void g2_DestroyWin()
 	glc::LcDev_ModelDestroy();
 
 	if(glc::m_pInput)	{	delete glc::m_pInput;			glc::m_pInput = {};		}
-	if(glc::m_pLcSprite){	delete glc::m_pLcSprite;		glc::m_pLcSprite = {};	}
 	if(glc::m_pd3dSprite){	glc::m_pd3dSprite->Release();	glc::m_pd3dSprite = {};	}
 	if(glc::m_pd3dDevice){	glc::m_pd3dDevice->Release();	glc::m_pd3dDevice = {};	}
 	if(glc::m_pD3D)		{	glc::m_pD3D->Release();			glc::m_pD3D = {};		}

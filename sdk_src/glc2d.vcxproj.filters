@@ -29,9 +29,6 @@
     <ClCompile Include="LcSound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LcSpriteX.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LcTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -62,9 +59,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ILcSound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ILcSpriteX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ILcTexture.h">
