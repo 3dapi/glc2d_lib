@@ -73,7 +73,7 @@ int UiEnd::Draw()
     const GameInfo* gameInfo = GameInfo::instance();
     if(s_fontScore >= 0)
     {
-        g2_FontDrawText(s_fontScore, {70, 300, 550, 370}, 0xFFFFFF00, "Score: %d", gameInfo->m_gameScore);
+        g2_FontDrawText(s_fontScore, {70, 300}, 0xFFFFFF00, "Score: %d", gameInfo->m_gameScore);
     }
 
     return S_OK;

@@ -100,8 +100,7 @@ int Render()
 	g2_Draw2D(nTx1, &rt1);
 
 
-	int c= g2_FontDrawText(nFont1, {20, 300, 500, 340}
-			, 0xffFFAA44, "Tri to Press Left or Right Key");
+	int c= g2_FontDrawText(nFont1, {20, 300}, 0xffFFAA44, "Tri to Press Left or Right Key");
 
 
 

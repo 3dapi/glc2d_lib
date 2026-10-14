@@ -92,8 +92,8 @@ int UiPlay::Draw()
     GameInfo* gameInfo = GameInfo::instance();
     if(s_fontStatus >= 0)
     {
-        g2_FontDrawText(s_fontStatus, { 5,  5, 300, 32}, 0xFFFFFF00, "Score: %d", gameInfo->m_gameScore);
-        g2_FontDrawText(s_fontStatus, { 5, 35, 300, 62}, 0xFFFF0000, "HP: %d", static_cast<int>(gameInfo->MainPlayer()->HP() ));
+        g2_FontDrawText(s_fontStatus, { 5,  5}, 0xFFFFFF00, "Score: %d", gameInfo->m_gameScore);
+        g2_FontDrawText(s_fontStatus, { 5, 35}, 0xFFFF0000, "HP: %d", static_cast<int>(gameInfo->MainPlayer()->HP() ));
     }
 
     {
@@ -108,7 +108,7 @@ int UiPlay::Draw()
         float hp = m_pScenePlay-> m_droneBoss-> HP();
         if(s_fontStatus >= 0)
         {
-            g2_FontDrawText(s_fontStatus, {5, 70, 300, 97}, 0xFFB300B3, "BOSS: %d", static_cast<int>(hp) );
+            g2_FontDrawText(s_fontStatus, {5, 70}, 0xFFB300B3, "BOSS: %d", static_cast<int>(hp) );
         }
 
         DrawTexture("ui/ui_rect", {150.0F, 73.0F}, { (hp + 0.4F) * 0.7F /100.0F, 0.25F}, 0xFFB300B3);

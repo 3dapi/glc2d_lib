@@ -180,7 +180,7 @@ void DrawBackground()
 
 void DrawScore()
 {
-	g2_FontDrawText(g_fontScore, {120, 5, 350, 55}, 0xFFFF0000, "%d : %d  COM:%d", g_userWin, g_comWin, g_handCom);
+	g2_FontDrawText(g_fontScore, {120, 5}, 0xFFFF0000, "%d : %d  COM:%d", g_userWin, g_comWin, g_handCom);
 }
 
 void DrawHands()
@@ -217,17 +217,17 @@ void DrawResultMessage()
 
 	if(g_handUser == g_handCom)
 	{
-		g2_FontDrawText(g_fontMsg, {240, 290, 430, 330}, 0xFFFFFF00, "Draw");
+		g2_FontDrawText(g_fontMsg, {240, 290}, 0xFFFFFF00, "Draw");
 		return;
 	}
 
 	if(IsUserWin(g_handUser, g_handCom))
 	{
-		g2_FontDrawText(g_fontMsg, {240, 290, 430, 330}, 0xFF00FF00, "You Win");
+		g2_FontDrawText(g_fontMsg, {240, 290}, 0xFF00FF00, "You Win");
 	}
 	else
 	{
-		g2_FontDrawText(g_fontMsg, {240, 290, 430, 330}, 0xFFFF0000, "You Lose");
+		g2_FontDrawText(g_fontMsg, {240, 290}, 0xFFFF0000, "You Lose");
 	}
 }
 
@@ -241,11 +241,11 @@ void DrawGameOverMessage()
 {
 	if(g_userWin >= GAME_WIN_COUNT)
 	{
-		g2_FontDrawText(g_fontScore, {180, 270, 500, 325}, 0xFF00FF00, "YOU WIN!");
+		g2_FontDrawText(g_fontScore, {180, 270}, 0xFF00FF00, "YOU WIN!");
 	}
 	else
 	{
-		g2_FontDrawText(g_fontScore, {180, 270, 500, 325}, 0xFFFF0000, "YOU LOSE");
+		g2_FontDrawText(g_fontScore, {180, 270}, 0xFFFF0000, "YOU LOSE");
 	}
 }
 

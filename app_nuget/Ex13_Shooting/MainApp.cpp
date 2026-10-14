@@ -15,6 +15,7 @@ MainApp& MainApp::Instance()
 int MainApp::Init()
 {
     GameInfo::instance();
+    g2_FontRegisterFile("Font/netmarbleB.ttf");
 
     m_prevTime = g2_TimeGetTime();
 
