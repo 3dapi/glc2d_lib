@@ -106,7 +106,7 @@ int		g2_Draw2D(const int _nKey
 				, const VEC2* pRotation=NULL							// 회전 중심 위치
 				, const float fAngle=0									// 회전 각도: Radian
 				, const DWORD dC=0xFFFFFFFF								// 이미지 파일 그리기
-				, const int	bMono=FALSE									// Monotone
+				, const int	bMono=FALSE									// Reserved: TRUE returns D3DERR_NOTAVAILABLE; grayscale is unsupported.
 				);
 
 int		g2_DrawAlphaOption(int nAlphaMethod=0);

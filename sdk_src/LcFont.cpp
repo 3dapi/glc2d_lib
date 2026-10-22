@@ -256,16 +256,11 @@ static int InternalFontDrawText(const int nIdx
 		static_cast<double>(metrics.tmHeight) * 0.12));
 	drawRect.bottom += extraHeight;
 
-	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
-	if(FAILED(hr))
-		return hr;
-	hr = sprite->SetTransform(&glc::CLcFont::m_tm);
-	int height = 0;
-	if(SUCCEEDED(hr))
-		height = pDxFnt->DrawTextA(sprite, s.c_str(), -1, &drawRect, flags, fontColor);
-	const HRESULT endHr = sprite->End();
+	HRESULT hr = glc::LcDev_SpritePrepare(glc::SPRITE_FILTER::Linear, glc::SPRITE_BLEND::Alpha);
 	if(FAILED(hr)) return hr;
-	if(FAILED(endHr)) return endHr;
+	hr = glc::LcDev_SpriteTransform(glc::CLcFont::m_tm);
+	if(FAILED(hr)) return hr;
+	const int height = pDxFnt->DrawTextA(sprite, s.c_str(), -1, &drawRect, flags, fontColor);
 	return height;
 }
 ////////////////////////////////////////////////////////////////////////////////

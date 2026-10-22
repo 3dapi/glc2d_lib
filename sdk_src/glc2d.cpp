@@ -11,6 +11,8 @@
 #pragma comment(lib, "dsound.lib")
 
 #include <chrono>
+#include <cmath>
+#include <cstring>
 #include <string>
 #include <windows.h>
 
@@ -74,6 +76,72 @@ int (*g2_Keyboard)(uint8_t* key);
 int (*g2_Mouse)(int x, int y, int z, int _event);
 
 }// namespace glc
+
+namespace
+{
+bool spriteBatchActive{};
+int spriteFilter = -1;
+int spriteDestBlend = -1;
+bool spriteTransformValid{};
+D3DXMATRIX spriteTransform;
+
+void ResetSpriteCache()
+{
+    spriteFilter = spriteDestBlend = -1;
+    spriteTransformValid = false;
+}
+}
+
+int glc::LcDev_SpriteTransform(const D3DXMATRIX& transform)
+{
+    if(!spriteBatchActive)
+        return D3DERR_INVALIDCALL;
+    if(spriteTransformValid && std::memcmp(&spriteTransform, &transform, sizeof transform) == 0)
+        return S_OK;
+    const HRESULT hr = glc::m_pd3dSprite->SetTransform(&transform);
+    if(SUCCEEDED(hr))
+    {
+        spriteTransform = transform;
+        spriteTransformValid = true;
+    }
+    return hr;
+}
+
+int glc::LcDev_SpritePrepare(SPRITE_FILTER filter, SPRITE_BLEND blend)
+{
+    if(!spriteBatchActive)
+        return D3DERR_INVALIDCALL;
+    const int sample = filter == SPRITE_FILTER::Point ? D3DTEXF_POINT : D3DTEXF_LINEAR;
+    const int destBlend = blend == SPRITE_BLEND::DestinationAlpha
+        ? D3DBLEND_DESTALPHA : D3DBLEND_INVSRCALPHA;
+    if(sample == spriteFilter && destBlend == spriteDestBlend)
+        return S_OK;
+
+    // Submit queued draws under their old state before changing the device.
+    if(spriteFilter != -1)
+    {
+        const HRESULT hr = glc::m_pd3dSprite->Flush();
+        if(FAILED(hr)) return hr;
+    }
+    auto device = glc::m_pd3dDevice;
+    if(destBlend != spriteDestBlend)
+    {
+        const HRESULT hr = device->SetRenderState(D3DRS_DESTBLEND, destBlend);
+        if(FAILED(hr)) return hr;
+        spriteDestBlend = destBlend;
+    }
+    if(sample != spriteFilter)
+    {
+        // A partial failure must not leave the previous sample mode cached.
+        spriteFilter = -1;
+        HRESULT hr = device->SetSamplerState(0, D3DSAMP_MAGFILTER, sample);
+        if(FAILED(hr)) return hr;
+        hr = device->SetSamplerState(0, D3DSAMP_MINFILTER, sample);
+        if(FAILED(hr)) return hr;
+        spriteFilter = sample;
+    }
+    return S_OK;
+}
 
 int g2_DefaultFrameMove()		{	return 0;	}
 int g2_DefaultRender()			{	return 0;	}
@@ -185,6 +253,9 @@ int g2_Draw2D(const int _nID
 			, const int	bMono
 			)
 {
+	// Keep the public signature, but never substitute a solid fill for grayscale.
+	if(bMono)
+		return D3DERR_NOTAVAILABLE;
 	return glc::LcDev_TextureDraw(glc::LcDev_TextureFind(_nID), pRct, pTrn, pScl, pRot, fRad, dC, bMono);
 }
 
@@ -192,6 +263,8 @@ int glc::LcDev_TextureDraw(ILcTexture* texture, const RECT* pRct,
 	const VEC2* pTrn, const VEC2* pScl, const VEC2* pRot,
 	float fRad, DWORD dC, int bMono)
 {
+	if(bMono)
+		return D3DERR_NOTAVAILABLE; // No grayscale shader in this backend.
 	if(!texture)
 		return 0;
 	auto sprite = glc::m_pd3dSprite;
@@ -205,55 +278,52 @@ int glc::LcDev_TextureDraw(ILcTexture* texture, const RECT* pRct,
 	RECT rect = {0, 0, texture->GetImageWidth(), texture->GetImageHeight()};
 	if(pRct)
 		rect = *pRct;
-	if(rect.left < 0) rect.left = 0;
-	if(rect.top < 0) rect.top = 0;
-	if(rect.right > texture->GetImageWidth()) rect.right = texture->GetImageWidth();
-	if(rect.bottom > texture->GetImageHeight()) rect.bottom = texture->GetImageHeight();
+	if(rect.left < 0)
+		rect.left = 0;
+	if(rect.top < 0)
+		rect.top = 0;
+	if(rect.right > texture->GetImageWidth())
+		rect.right = texture->GetImageWidth();
+	if(rect.bottom > texture->GetImageHeight())
+		rect.bottom = texture->GetImageHeight();
 	if(rect.left >= rect.right || rect.top >= rect.bottom)
 		return 0;
 
 	const VEC2 scale = pScl ? *pScl : VEC2(1, 1);
 	const VEC2 position = pTrn ? *pTrn : VEC2(0, 0);
-	D3DXMATRIX scaling, translation, transform;
-	D3DXMatrixScaling(&scaling, scale.x, scale.y, 1.0F);
 	// Negative scales flip within the positive extent, as in the old renderer.
 	const float x = position.x - (scale.x < 0 ? (rect.right - rect.left) * scale.x : 0);
 	const float y = position.y - (scale.y < 0 ? (rect.bottom - rect.top) * scale.y : 0);
-	D3DXMatrixTranslation(&translation, x, y, 0.0F);
-	transform = scaling * translation * glc::m_tmSprite;
-	if(pRot)
+	const float sx = scale.x * glc::m_tmSprite._11;
+	const float sy = scale.y * glc::m_tmSprite._22;
+	D3DXMATRIX transform(
+		sx, 0, 0, 0,
+		0, sy, 0, 0,
+		0, 0, 1, 0,
+		x * glc::m_tmSprite._11, y * glc::m_tmSprite._22, 0, 1);
+	if(pRot && fRad != 0.0F)
 	{
-		// Preserve the existing pivot in back-buffer coordinates and angle sign.
-		D3DXMATRIX toOrigin, rotation, fromOrigin;
-		D3DXMatrixTranslation(&toOrigin, -pRot->x, -pRot->y, 0.0F);
-		D3DXMatrixRotationZ(&rotation, -fRad);
-		D3DXMatrixTranslation(&fromOrigin, pRot->x, pRot->y, 0.0F);
-		transform = transform * toOrigin * rotation * fromOrigin;
+		// S * T * screenScale * T(-pivot) * R(-angle) * T(pivot).
+		// Keep the existing pivot in back-buffer coordinates and angle sign.
+		const float c = std::cos(fRad);
+		const float s = std::sin(fRad);
+		const float dx = transform._41 - pRot->x;
+		const float dy = transform._42 - pRot->y;
+		transform._11 = sx * c;
+		transform._12 = -sx * s;
+		transform._21 = sy * s;
+		transform._22 = sy * c;
+		transform._41 = dx * c + dy * s + pRot->x;
+		transform._42 = -dx * s + dy * c + pRot->y;
 	}
 
-	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
-	if(FAILED(hr))
-		return hr;
-	hr = sprite->SetTransform(&transform);
+	HRESULT hr = glc::LcDev_SpritePrepare(glc::SPRITE_FILTER::Point,
+		glc::m_nAlphaMethod == 1 ? glc::SPRITE_BLEND::DestinationAlpha : glc::SPRITE_BLEND::Alpha);
 	if(SUCCEEDED(hr))
-		hr = device->SetRenderState(D3DRS_DESTBLEND,
-			glc::m_nAlphaMethod == 1 ? D3DBLEND_DESTALPHA : D3DBLEND_INVSRCALPHA);
-	if(SUCCEEDED(hr))
-		hr = device->SetSamplerState(0, D3DSAMP_MAGFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_POINT);
-	if(SUCCEEDED(hr))
-		hr = device->SetSamplerState(0, D3DSAMP_MINFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_POINT);
-	if(SUCCEEDED(hr))
-		hr = device->SetSamplerState(0, D3DSAMP_MIPFILTER, bMono ? D3DTEXF_LINEAR : D3DTEXF_NONE);
-	// Use diffuse RGB for silhouettes while retaining texture alpha modulation.
-	if(SUCCEEDED(hr) && bMono)
-		hr = device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+		hr = glc::LcDev_SpriteTransform(transform);
 	if(SUCCEEDED(hr))
 		hr = sprite->Draw(dxTexture, &rect, nullptr, nullptr, dC);
-	const HRESULT endHr = sprite->End();
-	const HRESULT restoreHr = sprite->SetTransform(&glc::m_tmSprite);
-	if(FAILED(hr)) return hr;
-	if(FAILED(endHr)) return endHr;
-	return restoreHr;
+	return hr;
 }
 
 int g2_DrawAlphaOption(int nAlphaMethod)
@@ -273,24 +343,44 @@ int FrameMove2D()
 
 int Render3D()
 {
-	glc::m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, glc::m_dColor, 1.0f, 0 );
-	if( FAILED( glc::m_pd3dDevice->BeginScene() ) )
-		return -1;
+	auto device = glc::m_pd3dDevice;
+	auto sprite = glc::m_pd3dSprite;
+	HRESULT hr = device->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, glc::m_dColor, 1.0f, 0);
+	if(FAILED(hr))
+		return hr;
 
-	if( FAILED( glc::g2_Render2D() ) )
+	hr = device->BeginScene();
+	if(FAILED(hr))
+		return hr;
+
+	hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	if(FAILED(hr))
 	{
-		// error check
-		int c;
-		c = 100;
-	};
+		device->EndScene();
+		return hr;
+	}
 
-	glc::m_pd3dDevice->EndScene();
+	ResetSpriteCache(); // Begin/End and device reset can invalidate device state.
+	spriteBatchActive = true;
+	// Begin configures the common MODULATE/alpha states. Disable mipmapping
+	// once per frame; it is independent of image/font and sampling changes.
+	hr = device->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+	if(SUCCEEDED(hr))
+		hr = glc::LcDev_SpritePrepare(glc::SPRITE_FILTER::Point, glc::SPRITE_BLEND::Alpha);
+	if(SUCCEEDED(hr))
+		hr = glc::g2_Render2D();
+	const HRESULT endHr = sprite->End();
+	spriteBatchActive = false;
+	ResetSpriteCache();
+	const HRESULT sceneHr = device->EndScene();
+	if(FAILED(hr)) return hr;
+	if(FAILED(endHr)) return endHr;
+	if(FAILED(sceneHr)) return sceneHr;
 
-	auto hr = glc::m_pd3dDevice->Present( 0, 0, 0, 0);
+	hr = device->Present(nullptr, nullptr, nullptr, nullptr);
 	if(D3DERR_DEVICELOST == hr)
 		glc::m_bDeviceLost = true;
-
-	return S_OK;
+	return hr;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd,unsigned int uMsg,WPARAM wParam,LPARAM lParam)
