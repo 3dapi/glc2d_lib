@@ -284,6 +284,13 @@ int CLcxFont::BuildTexture(const std::string& str)
 			return hr;
 	}
 
+    // Submit earlier uses before changing pixels in a deferred sprite's texture.
+    if(m_pLcSprite)
+    {
+        hr=m_pLcSprite->Flush();
+        if(FAILED(hr)) { if(create) texture->Release(); return hr; }
+    }
+
 	// Update texture pixels.
 	D3DLOCKED_RECT lock{};
 	hr=texture->LockRect(0, &lock, nullptr, 0);

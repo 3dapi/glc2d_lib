@@ -42,6 +42,9 @@ tgLINE LINE[MAX_Tail];
 
 int main()
 {
+	if(FAILED(g2_InitSdk()))
+		return 1;
+
 	printf("Play Snake Game!\n\n");
 
 	//배경색을 바꾼다.

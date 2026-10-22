@@ -264,6 +264,12 @@ static int InternalFontDrawText(const int nIdx
 		static_cast<double>(metrics.tmHeight) * 0.12));
 	drawRect.bottom += extraHeight;
 
+	// Legacy D3DXFont draws immediately, so submit earlier 2D sprites first.
+	if(auto* queued = glc::CLcxFont::m_pLcSprite)
+	{
+		const HRESULT flushHr = queued->Flush();
+		if(FAILED(flushHr)) return flushHr;
+	}
 	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
 	if(FAILED(hr))
 		return hr;

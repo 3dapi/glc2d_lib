@@ -17,6 +17,7 @@ interface ILcSpriteX
 
 	virtual	int		Begin(DWORD=0)=0;
 	virtual	int		End(DWORD=0)=0;
+    virtual int		Flush()=0;							// Submit queued draws before external rendering or texture updates.
 
 	virtual	int		OnResetDevice()=0;
 	virtual	int		OnLostDevice()=0;

@@ -6,6 +6,7 @@
 #include <d3d9.h>
 #include <cmath>
 #include <cstring>
+#include <vector>
 
 #include "glcInternal.h"
 #include "ILcTexture.h"
@@ -50,8 +51,21 @@ public:
     bool m_linear{};
     int m_filter{-1}, m_blend{-1}, m_mono{-1};
     DWORD m_color{};
-    bool m_colorValid{};
-    LPDIRECT3DTEXTURE9 m_texture{};
+    LPDIRECT3DTEXTURE9 m_texture{}; // Own a reference while draws are deferred.
+    static constexpr UINT MAX_BATCH_QUADS = 4096;
+    static constexpr UINT MAX_BATCH_VERTICES = MAX_BATCH_QUADS * 4;
+    std::vector<VtxRHWUV1> m_vertices;
+    LPDIRECT3DVERTEXBUFFER9 m_vertexBuffer{};
+    LPDIRECT3DINDEXBUFFER9 m_indexBuffer{};
+    UINT m_writeVertex{};
+    HRESULT m_batchError{S_OK};
+    struct AppliedState
+    {
+        int filter{-1}, blend{-1}, mono{-1};
+        DWORD color{};
+        bool colorValid{};
+        LPDIRECT3DTEXTURE9 texture{};
+    } m_applied;
 
 public:
 	CLcSpriteX();
@@ -62,6 +76,7 @@ public:
 
 	int		Begin(DWORD=0) override;
 	int		End(DWORD=0) override;
+    int Flush() override;
 
 	int		OnResetDevice() override;
 	int		OnLostDevice() override;
@@ -85,8 +100,9 @@ public:
 				) override;
 
 	void	AlphaOption(int opt=0) override;
-    void FilterOption(bool linear=false) override { m_linear = linear; }
+    void FilterOption(bool linear=false) override;
 protected:
+    int CreateBuffers();
 	int		DrawExt(const void* pTex
 					, const RECT* pRct
 					, const VEC2* pScl
@@ -112,6 +128,10 @@ CLcSpriteX::~CLcSpriteX()
 
 void CLcSpriteX::Destroy()
 {
+    m_vertices.clear();
+    SAFE_RELEASE(m_texture);
+    SAFE_RELEASE(m_vertexBuffer);
+    SAFE_RELEASE(m_indexBuffer);
 	SAFE_RELEASE(	m_pEft		);
 	SAFE_RELEASE(	m_pFVF		);
 }
@@ -186,12 +206,46 @@ int CLcSpriteX::Create(void* p1, void* p2, void* p3, void* p4)
 	// 정점 선언 생성
 	D3DVERTEXELEMENT9 pVertexElement[MAX_FVF_DECL_SIZE]={0};
 	D3DXDeclaratorFromFVF(CLcSpriteX::VtxRHWUV1::FVF, pVertexElement);
-	return m_pDev->CreateVertexDeclaration(pVertexElement, &m_pFVF);
+	hr = m_pDev->CreateVertexDeclaration(pVertexElement, &m_pFVF);
+    if(FAILED(hr)) return hr;
+    m_vertices.reserve(MAX_BATCH_VERTICES);
+    return CreateBuffers();
+}
+
+int CLcSpriteX::CreateBuffers()
+{
+    if(!m_indexBuffer)
+    {
+        HRESULT hr = m_pDev->CreateIndexBuffer(MAX_BATCH_QUADS * 6 * sizeof(WORD),
+            D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &m_indexBuffer, nullptr);
+        if(FAILED(hr)) return hr;
+        WORD* indices{};
+        hr = m_indexBuffer->Lock(0, 0, reinterpret_cast<void**>(&indices), 0);
+        if(FAILED(hr)) { SAFE_RELEASE(m_indexBuffer); return hr; }
+        // Same quad order as glc_quad.cpp: 0,1,2, 0,2,3; then 4,5,6, 4,6,7.
+        for(UINT q=0; q<MAX_BATCH_QUADS; ++q)
+        {
+            const WORD base = static_cast<WORD>(q * 4);
+            indices[q*6+0]=base;   indices[q*6+1]=base+1; indices[q*6+2]=base+2;
+            indices[q*6+3]=base;   indices[q*6+4]=base+2; indices[q*6+5]=base+3;
+        }
+        hr = m_indexBuffer->Unlock();
+        if(FAILED(hr)) { SAFE_RELEASE(m_indexBuffer); return hr; }
+    }
+    if(!m_vertexBuffer)
+    {
+        HRESULT hr = m_pDev->CreateVertexBuffer(MAX_BATCH_VERTICES * sizeof(VtxRHWUV1),
+            D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, VtxRHWUV1::FVF,
+            D3DPOOL_DEFAULT, &m_vertexBuffer, nullptr);
+        if(FAILED(hr)) return hr;
+        m_writeVertex=0;
+    }
+    return S_OK;
 }
 
 int CLcSpriteX::Begin(DWORD)
 {
-    if(m_batch) return D3DERR_INVALIDCALL;
+    if(m_batch || !m_vertexBuffer || !m_indexBuffer) return D3DERR_INVALIDCALL;
     HRESULT hr = m_pEft->SetTechnique("Tech");
     if(FAILED(hr)) return hr;
     UINT passes = 0;
@@ -201,8 +255,10 @@ int CLcSpriteX::Begin(DWORD)
     if(FAILED(hr)) { m_pEft->End(); return hr; }
     m_batch = true;
     m_filter = m_blend = m_mono = -1;
-    m_colorValid = false;
-    m_texture = nullptr;
+    m_applied = {};
+    SAFE_RELEASE(m_texture);
+    m_vertices.clear();
+    m_batchError = S_OK;
     struct State { D3DRENDERSTATETYPE key; DWORD value; };
     const State states[] = {
         {D3DRS_CULLMODE, D3DCULL_NONE}, {D3DRS_ALPHABLENDENABLE, TRUE},
@@ -224,35 +280,111 @@ int CLcSpriteX::Begin(DWORD)
     return hr;
 }
 
+int CLcSpriteX::Flush()
+{
+    if(FAILED(m_batchError)) return m_batchError;
+    if(m_vertices.empty()) return S_OK;
+    if(!m_batch) return D3DERR_INVALIDCALL;
+
+    const UINT count = static_cast<UINT>(m_vertices.size());
+    if(m_writeVertex + count > MAX_BATCH_VERTICES) m_writeVertex=0;
+    const bool singleQuad = count == 4;
+    HRESULT hr = S_OK;
+    if(!singleQuad)
+    {
+        void* destination{};
+        hr = m_vertexBuffer->Lock(m_writeVertex * sizeof(VtxRHWUV1),
+            count * sizeof(VtxRHWUV1), &destination,
+            m_writeVertex == 0 ? D3DLOCK_DISCARD : D3DLOCK_NOOVERWRITE);
+        if(SUCCEEDED(hr))
+        {
+            std::memcpy(destination, m_vertices.data(), count * sizeof(VtxRHWUV1));
+            hr = m_vertexBuffer->Unlock();
+        }
+    }
+    if(SUCCEEDED(hr) && m_applied.filter != m_filter)
+    {
+        hr = m_pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, m_filter);
+        if(SUCCEEDED(hr)) hr = m_pDev->SetSamplerState(0, D3DSAMP_MINFILTER, m_filter);
+        if(SUCCEEDED(hr)) m_applied.filter=m_filter;
+    }
+    if(SUCCEEDED(hr) && m_applied.blend != m_blend)
+    {
+        hr = m_pDev->SetRenderState(D3DRS_DESTBLEND, m_blend);
+        if(SUCCEEDED(hr)) m_applied.blend=m_blend;
+    }
+    if(SUCCEEDED(hr) && m_applied.texture != m_texture)
+    {
+        hr = m_pDev->SetTexture(0, m_texture);
+        if(SUCCEEDED(hr)) m_applied.texture=m_texture;
+    }
+    bool changed=false;
+    if(SUCCEEDED(hr) && m_applied.mono != m_mono)
+    {
+        hr = m_pEft->SetInt("m_bMono", m_mono);
+        if(SUCCEEDED(hr)) { m_applied.mono=m_mono; changed=true; }
+    }
+    if(SUCCEEDED(hr) && (!m_applied.colorValid || m_applied.color != m_color))
+    {
+        const DCOL diffuse(m_color);
+        hr = m_pEft->SetVector("m_Diff", reinterpret_cast<const D3DXVECTOR4*>(&diffuse));
+        if(SUCCEEDED(hr)) { m_applied.color=m_color; m_applied.colorValid=true; changed=true; }
+    }
+    if(SUCCEEDED(hr) && changed) hr = m_pEft->CommitChanges();
+    if(!singleQuad)
+    {
+        if(SUCCEEDED(hr)) hr = m_pDev->SetStreamSource(0, m_vertexBuffer, 0, sizeof(VtxRHWUV1));
+        if(SUCCEEDED(hr)) hr = m_pDev->SetIndices(m_indexBuffer);
+        if(SUCCEEDED(hr)) hr = m_pDev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,
+            m_writeVertex, 0, count, 0, count / 2);
+    }
+    else if(SUCCEEDED(hr))
+    {
+        // Avoid locking a vertex buffer when state changes leave only one quad.
+        hr = m_pDev->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, m_vertices.data(), sizeof(VtxRHWUV1));
+    }
+    m_vertices.clear();
+    if(FAILED(hr)) m_batchError=hr;
+    else if(!singleQuad) m_writeVertex += count;
+    return hr;
+}
+
 int CLcSpriteX::End(DWORD)
 {
     if(!m_batch) return D3DERR_INVALIDCALL;
+    const HRESULT drawHr = Flush();
     const HRESULT passHr = m_pEft->EndPass();
     const HRESULT hr = m_pEft->End();
     m_batch = false;
-    m_texture = nullptr;
-    return FAILED(passHr) ? passHr : hr;
+    SAFE_RELEASE(m_texture);
+    return FAILED(drawHr) ? drawHr : FAILED(passHr) ? passHr : hr;
 }
 
 int CLcSpriteX::OnResetDevice()
 {
-	LPDIRECT3DSURFACE9	pSfc;
-	D3DSURFACE_DESC		desc;
-
-	m_pDev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &pSfc);
-	pSfc->GetDesc(&desc);
-
-	m_nScnW = desc.Width;
-	m_nScnH = desc.Height;
-	pSfc->Release();
-	int hr = m_pEft->OnResetDevice();
-	return hr;
+    LPDIRECT3DSURFACE9 surface{};
+    HRESULT hr = m_pDev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &surface);
+    if(FAILED(hr)) return hr;
+    D3DSURFACE_DESC desc{};
+    hr = surface->GetDesc(&desc);
+    surface->Release();
+    if(FAILED(hr)) return hr;
+    m_nScnW=desc.Width; m_nScnH=desc.Height;
+    hr = m_pEft->OnResetDevice();
+    return FAILED(hr) ? hr : CreateBuffers();
 }
 
 int CLcSpriteX::OnLostDevice()
 {
-	int hr = m_pEft->OnLostDevice();
-	return hr;
+    // Pending draws cannot survive a lost device. The managed index buffer can.
+    m_vertices.clear();
+    if(m_batch) { m_pEft->EndPass(); m_pEft->End(); m_batch=false; }
+    SAFE_RELEASE(m_texture);
+    m_pDev->SetStreamSource(0, nullptr, 0, 0);
+    m_pDev->SetIndices(nullptr);
+    SAFE_RELEASE(m_vertexBuffer);
+    m_writeVertex=0;
+    return m_pEft->OnLostDevice();
 }
 
 int CLcSpriteX::Draw(const void* pTex		// Texture
@@ -293,7 +425,6 @@ int CLcSpriteX::DrawExt(const void* pTex
 	ILcTexture*	pLcTx= (ILcTexture*)pTex;
 	PDTX		pDxTx = {};
 
-	DCOL	dDiff = 0XFFFFFFFF;
 	VEC2	vScl(1,1);
 	VEC2	vRot(0,0);
 	VEC2	vTrn(0,0);
@@ -322,7 +453,6 @@ int CLcSpriteX::DrawExt(const void* pTex
 
 
 	// 1. 입력 값 복사
-	dDiff = dColor;
 
 	// 1.1 이미지 소스 1 영역 복사
 	if(pRct)
@@ -418,53 +548,43 @@ int CLcSpriteX::DrawExt(const void* pTex
 
 
     if(!m_batch) return D3DERR_INVALIDCALL;
+    if(FAILED(m_batchError)) return m_batchError;
     const int filter = m_linear ? D3DTEXF_LINEAR : D3DTEXF_POINT;
-    if(filter != m_filter) {
-        m_filter = -1;
-        hr = m_pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, filter);
-        if(FAILED(hr)) return hr;
-        hr = m_pDev->SetSamplerState(0, D3DSAMP_MINFILTER, filter);
-        if(FAILED(hr)) return hr;
-        m_filter = filter;
-    }
     const int blend = m_Alphblend == 1 ? D3DBLEND_DESTALPHA : D3DBLEND_INVSRCALPHA;
-    if(blend != m_blend) {
-        hr = m_pDev->SetRenderState(D3DRS_DESTBLEND, blend);
+    // Only consecutive compatible draws are combined. Never sort transparent 2D draws.
+    if(!m_vertices.empty() && (pDxTx != m_texture || dColor != m_color ||
+        bMono != m_mono || filter != m_filter || blend != m_blend ||
+        m_vertices.size() + 4 > MAX_BATCH_VERTICES))
+    {
+        hr=Flush();
         if(FAILED(hr)) return hr;
-        m_blend = blend;
     }
-    if(pDxTx != m_texture) {
-        hr = m_pDev->SetTexture(0, pDxTx);
-        if(FAILED(hr)) return hr;
-        m_texture = pDxTx;
+    if(pDxTx != m_texture)
+    {
+        pDxTx->AddRef();
+        SAFE_RELEASE(m_texture);
+        m_texture=pDxTx;
     }
-    bool changed = false;
-    if(m_mono != bMono) {
-        hr = m_pEft->SetInt("m_bMono", bMono);
-        if(FAILED(hr)) return hr;
-        m_mono = bMono;
-        changed = true;
+    m_filter=filter; m_blend=blend; m_mono=bMono; m_color=dColor;
+    // Append TL, TR, BR, BL, matching the shared quad index pattern.
+    for(auto vertex : m_pVtx)
+    {
+        vertex.p.x -= 0.5F; vertex.p.y -= 0.5F;
+        m_vertices.push_back(vertex);
     }
-    if(!m_colorValid || m_color != dColor) {
-        hr = m_pEft->SetVector("m_Diff", (D3DXVECTOR4*)&dDiff);
-        if(FAILED(hr)) return hr;
-        m_color = dColor;
-        m_colorValid = true;
-        changed = true;
-    }
-    if(changed) {
-        hr = m_pEft->CommitChanges();
-        if(FAILED(hr)) { m_mono = -1; m_colorValid = false; return hr; }
-    }
-    // D3D9 pixel centers: preserve one texel per pixel for bitmap text.
-    for(auto& vertex : m_pVtx) { vertex.p.x -= 0.5F; vertex.p.y -= 0.5F; }
-    return m_pDev->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, m_pVtx, sizeof(VtxRHWUV1));
-
+    return S_OK;
 }
 
 void CLcSpriteX::AlphaOption(int opt)
 {
-	m_Alphblend = opt;
+    if(opt != m_Alphblend && m_batch) Flush();
+    m_Alphblend=opt;
+}
+
+void CLcSpriteX::FilterOption(bool linear)
+{
+    if(linear != m_linear && m_batch) Flush();
+    m_linear=linear;
 }
 
 int LcDev_SpriteCreate(ILcSpriteX** pData
