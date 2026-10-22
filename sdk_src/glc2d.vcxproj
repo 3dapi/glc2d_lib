@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -100,7 +100,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug\glc2d.pch</PrecompiledHeaderOutputFile>
@@ -112,7 +112,8 @@
     <PostBuildEvent>
       <Command>mkdir ..\include
 copy glcType.h ..\include
-copy glc2d.h ..\include</Command>
+copy glc2d.h ..\include
+copy ILcxFont.h ..\include</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <Culture>0x0412</Culture>
@@ -136,7 +137,7 @@ copy glc2d.h ..\include</Command>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug\glc2d.pch</PrecompiledHeaderOutputFile>
@@ -148,7 +149,8 @@ copy glc2d.h ..\include</Command>
     <PostBuildEvent>
       <Command>mkdir ..\include
 copy glcType.h ..\include
-copy glc2d.h ..\include</Command>
+copy glc2d.h ..\include
+copy ILcxFont.h ..\include</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <Culture>0x0412</Culture>
@@ -172,7 +174,7 @@ copy glc2d.h ..\include</Command>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Release\glc2d.pch</PrecompiledHeaderOutputFile>
@@ -183,7 +185,8 @@ copy glc2d.h ..\include</Command>
     <PostBuildEvent>
       <Command>mkdir ..\include
 copy glcType.h ..\include
-copy glc2d.h ..\include</Command>
+copy glc2d.h ..\include
+copy ILcxFont.h ..\include</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <Culture>0x0412</Culture>
@@ -207,7 +210,7 @@ copy glc2d.h ..\include</Command>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Release\glc2d.pch</PrecompiledHeaderOutputFile>
@@ -218,7 +221,8 @@ copy glc2d.h ..\include</Command>
     <PostBuildEvent>
       <Command>mkdir ..\include
 copy glcType.h ..\include
-copy glc2d.h ..\include</Command>
+copy glc2d.h ..\include
+copy ILcxFont.h ..\include</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <Culture>0x0412</Culture>
@@ -239,6 +243,8 @@ copy glc2d.h ..\include</Command>
     <ClCompile Include="glcInternal.cpp" />
     <ClCompile Include="LcDsSound.cpp" />
     <ClCompile Include="LcFont.cpp" />
+    <ClCompile Include="LcxFont.cpp" />
+    <ClCompile Include="LcSpriteX.cpp" />
     <ClCompile Include="LcInput.cpp" />
     <ClCompile Include="LcMfPlayer.cpp" />
     <ClCompile Include="LcModel.cpp" />
@@ -252,6 +258,9 @@ copy glc2d.h ..\include</Command>
     <ClInclude Include="glcInternal.h" />
     <ClInclude Include="glcType.h" />
     <ClInclude Include="ILcFont.h" />
+    <ClInclude Include="ILcxFont.h" />
+    <ClInclude Include="LcxFont.h" />
+    <ClInclude Include="ILcSpriteX.h" />
     <ClInclude Include="ILcInput.h" />
     <ClInclude Include="ILcModel.h" />
     <ClInclude Include="ILcSound.h" />

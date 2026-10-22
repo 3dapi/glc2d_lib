@@ -21,9 +21,7 @@ protected:
 	std::string			m_sFile;
 	LPDIRECT3DTEXTURE9	m_pTex{};
 	D3DXIMAGE_INFO		m_pImg{};
-
-	int					m_SrfW{};
-	int					m_SrfH{};
+	VEC2i				m_texSize{};
 
 public:
 	CLcTexture();
@@ -31,16 +29,13 @@ public:
 
 	virtual	int		Create(void* p1=NULL,void* p2=NULL,void* p3=NULL,void* p4=NULL);
 	virtual	void	Destroy();
-	virtual	int		GetID();
 
-	virtual	int		GetImageWidth();
-	virtual	int		GetImageHeight();
-	virtual	int		GetSurfaceWidth();
-	virtual	int		GetSurfaceHeight();
+	int		GetID() const override;
+	VEC2i	GetImageSize() const override;
+	VEC2i	GetSurfaceSize() const override;
 
-	virtual	void*	GetTexture();
-	virtual	void	GetImageRect(void* rc);
-
+	void*	GetTexture() const override;
+	RECTi	GetImageRect() const override;
 	CSTR	GetName();
 
 	inline static	int					m_nIDTex {};		// Texture ID
@@ -60,7 +55,7 @@ CLcTexture::~CLcTexture()
 	Destroy();
 }
 
-int CLcTexture::GetID()
+int CLcTexture::GetID() const
 {
 	return m_nID;
 }
@@ -93,8 +88,8 @@ int CLcTexture::Create(void* p1,void* p2,void* p3,void* p4)
 
 	D3DSURFACE_DESC dsc;
 	m_pTex->GetLevelDesc(0, &dsc);
-	m_SrfW = dsc.Width;
-	m_SrfH = dsc.Height;
+	m_texSize.x = dsc.Width;
+	m_texSize.y = dsc.Height;
 
 	// 새로운 아이디 부여
 
@@ -124,37 +119,24 @@ void CLcTexture::Destroy()
 		m_sFile.clear();
 }
 
-int CLcTexture::GetImageWidth()
+VEC2i CLcTexture::GetImageSize() const
 {
-	return m_pImg.Width;
+	return {(int)m_pImg.Width, (int)m_pImg.Height};
 }
 
-int CLcTexture::GetImageHeight()
+VEC2i CLcTexture::GetSurfaceSize() const
 {
-	return m_pImg.Height;
+	return m_texSize;
 }
 
-
-int CLcTexture::GetSurfaceWidth()
-{
-	return m_SrfW;
-}
-
-int CLcTexture::GetSurfaceHeight()
-{
-	return m_SrfH;
-}
-
-
-void* CLcTexture::GetTexture()
+void* CLcTexture::GetTexture() const
 {
 	return m_pTex;
 }
 
-void CLcTexture::GetImageRect(void* v)
+RECTi CLcTexture::GetImageRect() const
 {
-	RECT	rc={0,0, (LONG)m_pImg.Width, (LONG)m_pImg.Height};
-	memcpy(v, &rc, sizeof(RECT));
+	return {0,0, (long)m_pImg.Width, (long)m_pImg.Height};
 }
 
 
@@ -259,7 +241,7 @@ int g2_TextureWidth(int _nID)
 		return -1;
 	}
 	auto ret = *itr;
-	return ret->GetImageWidth();
+	return ret->GetImageSize().x;
 }
 
 int g2_TextureHeight(int _nID)
@@ -271,5 +253,5 @@ int g2_TextureHeight(int _nID)
 		return -1;
 	}
 	auto ret = *itr;
-	return ret->GetImageHeight();
+	return ret->GetImageSize().y;
 }

@@ -4,7 +4,7 @@
  * * Version History:
  * 1. Initial development using DirectX SDK (Summer Update 2003).
  * 2. Updated for compatibility with DirectX SDK (June 2010) and Visual Studio 2008.
- * 3. Current Build Environment: 
+ * 3. Current Build Environment:
  * - IDE: Visual Studio 2022
  * - SDK: Microsoft.DXSDK.D3DX (Version 9.29.952.8)
  */
@@ -17,24 +17,23 @@
 #define _glc2d_H_
 
 #include "glcType.h"
-#include <windows.h>
 #include <initializer_list>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum EInput
 {
-    EINPUT_NONE  = 0,
-    EINPUT_DOWN  = 1,
-    EINPUT_UP	 = 2,
-    EINPUT_PRESS = 3,
-    EINPUT_DBCLC = 4,
+	EINPUT_NONE  = 0,
+	EINPUT_DOWN  = 1,
+	EINPUT_UP	 = 2,
+	EINPUT_PRESS = 3,
+	EINPUT_DBCLC = 4,
 
-    EINPUT_LBUTTON = 0,
+	MAX_INPUT_KEY = GLC_MAX_KEY,
+	MAX_INPUT_BTN = 8,
+
+	EINPUT_LBUTTON = 0,
 	EINPUT_RBUTTON = 1,
 	EINPUT_MBUTTON = 2,
-
-    MAX_INPUT_KEY = 256,
-    MAX_INPUT_BTN = 8,
 };
 
 enum EFont2DAlign
@@ -53,11 +52,11 @@ enum EFont2DAlign
 int		g2_InitSdk();													// Initialize SDK
 
 // Create window and DirectX
-int		g2_CreateWin(int x,int y										// Screen position x, y
+int		g2_CreateWin(int x, int y										// Screen position x, y
 						 , int ScnW, int ScnH							// Screen Width, height
-						 , CSTR sName, bool bWindowed=true					// Class name, windowed: true, fullscreen: false
+						 , CSTR sName, bool bWindowed=true				// Class name, windowed: true, fullscreen: false
 						 , float scnScale = 1.0F						// Screen Scale
-						 );
+						);
 
 void	g2_DestroyWin();												// 윈도우와 DirectX소멸
 int		g2_Run();														// 게임 루프
@@ -65,10 +64,10 @@ int		g2_SetWindowMode(bool bWindowed);								// Change Window Mode: windows: tr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setting the runtime Function pointer
-void	g2_SetFrameMove( int (*)() );									// 게임 데이터 update 함수
-void	g2_SetRender( int (*)() );										// 게임 데이터 렌더링 함수
-void	g2_SetKeyboard( int (*)(uint8_t*) );							// 게임엔진에 키보드 이벤트를 가져오는 함수를 연결해주는 함수
-void	g2_SetMouse( int (*)(int x,int y,int z,int _event) );			// 게임엔진에 마우스 이벤트를 가져오는 함수를 연결해주는 함수
+void	g2_SetFrameMove(int (*)());										// 게임 데이터 update 함수
+void	g2_SetRender(int (*)());										// 게임 데이터 렌더링 함수
+void	g2_SetKeyboard(int (*)(uint8_t*));								// 게임엔진에 키보드 이벤트를 가져오는 함수를 연결해주는 함수
+void	g2_SetMouse(int (*)(int x, int y, int z, int _event));			// 게임엔진에 마우스 이벤트를 가져오는 함수를 연결해주는 함수
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Keyboard and Mouse
@@ -93,7 +92,7 @@ void	g2_SetStateShow(int _bShow);									// State 보여주기
 void	g2_SetCursorShow(int _bShow);									// Cursor 보여주기
 void	g2_SetClearColor(DWORD dC);										// 배경화면 클리어 색상설정
 DWORD	g2_GetClearColor();												// 배령화면 클리어 색상 가져오기
-void	g2_SetWindowTitle(const char *format, ...);						// 윈도우 타이틀
+void	g2_SetWindowTitle(const char* format, ...);						// 윈도우 타이틀
 int		g2_SetWindowIcon(long ID);										// Change Icon
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +109,7 @@ int		g2_Draw2D(const int _nKey
 				, const VEC2* pRotation=NULL							// 회전 중심 위치
 				, const float fAngle=0									// 회전 각도: Radian
 				, const DWORD dC=0xFFFFFFFF								// 이미지 파일 그리기
-				, const int	bMono=FALSE									// Reserved: TRUE returns D3DERR_NOTAVAILABLE; grayscale is unsupported.
+				, const int	bMono=FALSE									// Legacy LcSpriteX monochrome shader option.
 				);
 
 int		g2_DrawAlphaOption(int nAlphaMethod=0);
@@ -122,16 +121,23 @@ int		g2_FontCreate(CSTR sName, long iH, long iItalic=0);				// 폰트 객체 생
 int		g2_FontDrawText(const int nIdx									// 문자열 출력
 					   , const RECT& rc									// 화면에 영역(left, top, right, bottom)
 					   , const DWORD fontColor
-					   , const char *format, ...);
+					   , const char* format, ...);
 int		g2_FontDrawText(const int nIdx									// 문자열 출력
 					   , const VEC2i& pos								// 출력 시작 위치(x, y). 크기는 g2_FontCreate의 iH 사용
 					   , const DWORD fontColor
-					   , const char *format, ...);
+					   , const char* format, ...);
 
 // Brace-list calls: {x, y} for a position, {left, top, right, bottom} for a region.
 // Other list sizes return -1.
-int g2_FontDrawText(int nIdx, std::initializer_list<LONG> coordinates,
-	DWORD fontColor, const char* format, ...);
+int g2_FontDrawText(int nIdx, std::initializer_list<int> coordinates,
+						DWORD fontColor, const char* format, ...);
+
+// Create after g2_CreateWin(). Returns nullptr on failure.
+// The caller owns the object: delete it before g2_DestroyWin().
+void*	g2_LcxFontCreate(const char* fontFace, long height, long italic=0);
+int		g2_LcxFontRelease(void*& font);
+int		g2_LcxFontSetText(void* font, const char* text);
+int		g2_LcxFontDraw(void* font, const VEC2i& pos={}, const DWORD dC=0xFFFFFFFF);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // sound

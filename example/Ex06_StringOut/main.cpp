@@ -25,9 +25,9 @@ int		nTx1;
 int		iImgW1;
 int		iImgH1;
 
-int		nFont1;
-int		nFont2;
-int		nFont3;
+void*	pFont1{};
+void*	pFont2{};
+void*	pFont3{};
 
 int		mouseX;
 int		mouseY;
@@ -54,12 +54,17 @@ int main()
 	g2_FontRegisterFile("Font/NEXON Lv2 Gothic Bold.ttf");
 	g2_FontRegisterFile("Font/netmarbleM.ttf");
 	
-	nFont1 = g2_FontCreate("넥슨Lv2고딕 Bold", 20, 0);
-	nFont2 = g2_FontCreate("netmarble Medium", 25, 0);
-	nFont3 = g2_FontCreate("나눔손글씨 펜", 40, 1);
+	pFont1 = g2_LcxFontCreate("넥슨Lv2고딕 Bold", 20, 0);
+	pFont2 = g2_LcxFontCreate("netmarble Medium", 25, 0);
+	pFont3 = g2_LcxFontCreate("나눔손글씨 펜", 40, 1);
+
+	g2_LcxFontSetText(pFont1, "마우스의 왼쪽 버튼 클릭");
 
 	g2_Run();
 
+	g2_LcxFontRelease(pFont1);
+	g2_LcxFontRelease(pFont2);
+	g2_LcxFontRelease(pFont3);
 	g2_DestroyWin();
 
 	return 0;
@@ -71,6 +76,13 @@ int FrameMove()
 	mouseY = g2_GetMouseY();
 	mouseZ = g2_GetMouseZ();
 	pKey = g2_GetKeyboard();
+    if(g2_GetMouseEvent(1))
+    {
+        char text[128];
+        snprintf(text, sizeof text, "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
+        // The setter compares UTF-8 bytes and uploads only when the text changes.
+		return g2_LcxFontSetText(pFont3, text);
+    }
 
 	return 0;
 }
@@ -79,11 +91,11 @@ int Render()
 {
 	RECT	rt1 = {0,0,iImgW1, iImgH1};
 	g2_Draw2D(nTx1, &rt1);
-	g2_FontDrawText(nFont2, {10, 10}, 0xffffFF00, "마우스의 오른쪽 버튼 클릭");
+	g2_LcxFontDraw(pFont1, {10, 10}, 0xffffFF00);
 
 	if( g2_GetMouseEvent(1))		// R button
 	{
-		int c= g2_FontDrawText(nFont3, {mouseX, mouseY}, 0xffffaaff , "Mouse 위치: %d %d %d ", mouseX, mouseY, mouseZ);
+		int c= g2_LcxFontDraw(pFont3, {mouseX, mouseY}, 0xffffaaff);
 	}
 
 	return 0;

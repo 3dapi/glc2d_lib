@@ -148,8 +148,8 @@ void CLcModel2D::SetRect(void* rc)
 {
 	if(!rc)
 	{
-		int nW = m_AniTex->GetImageWidth();
-		int nH = m_AniTex->GetImageHeight();
+		int nW = m_AniTex->GetImageSize().x;
+		int nH = m_AniTex->GetImageSize().y;
 		::SetRect(&m_ImgRc, 0,0, nW, nH);
 	}
 	else

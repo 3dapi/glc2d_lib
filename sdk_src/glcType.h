@@ -43,6 +43,7 @@ typedef	D3DXIMAGE_INFO						DIMG;
 typedef	const char*							CSTR;
 typedef	void*								VPTR;
 typedef	uint8_t								KEYCODE;
+typedef	unsigned int						COLOR4;
 
 typedef	struct VEC2i
 {
@@ -53,5 +54,10 @@ typedef	struct VEC3i
 {
 	int x, y, z;
 } VEC3i;
+
+typedef	struct RECTi
+{
+	long l, t, r, b; // left, top, right, bottom
+} RECTi;
 
 #endif

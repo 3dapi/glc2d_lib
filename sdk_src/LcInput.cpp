@@ -84,7 +84,7 @@ CLcInput::CLcInput()
 	memset(m_dBtnBgn, 0, sizeof(m_dBtnBgn));
 	memset(m_dBtnCnt, 0, sizeof(m_dBtnCnt));
 
-	uint8_t	sKey[256]={0};
+	uint8_t	sKey[GLC_MAX_KEY]={0};
 	::SetKeyboardState(sKey);
 }
 

@@ -20,7 +20,7 @@ interface ILcInput
 		EINPUT_PRESS = 3,
 		EINPUT_DBCLC = 4,
 
-		MAX_INPUT_KEY = 256,
+		MAX_INPUT_KEY = GLC_MAX_KEY,
 		MAX_INPUT_BTN = 8,
 	};
 

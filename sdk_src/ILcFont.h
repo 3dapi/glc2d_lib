@@ -27,7 +27,7 @@ int LcDev_FontCreate(ILcFont** pData
 					, void* p4={}
 					);
 
-int			LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pTm);
+int			LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pLcSprite, void* pTm);
 ILcFont*	LcDev_FontFind(int _nID);
 void		LcDev_FontDestroy();
 int			LcDev_FontOnLostDevice();

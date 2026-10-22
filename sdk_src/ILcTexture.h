@@ -12,22 +12,19 @@ namespace glc
 
 interface	ILcTexture
 {
-	virtual	~ILcTexture(){};
+	virtual	~ILcTexture()=default;
 
-	virtual	int		GetID()=0;
-
-	virtual	int		GetImageWidth()=0;
-	virtual	int		GetImageHeight()=0;
-	virtual	int		GetSurfaceWidth()=0;
-	virtual	int		GetSurfaceHeight()=0;
-	virtual	void*	GetTexture()=0;
-	virtual	void	GetImageRect(void* rc)=0;
+	virtual	int		GetID() const =0;
+	virtual	VEC2i	GetImageSize() const =0;
+	virtual	VEC2i	GetSurfaceSize() const =0;
+	virtual	void*	GetTexture() const =0;
+	virtual	RECTi	GetImageRect() const =0;
 };
 
 // Internal draw path shared by registered textures and model-owned textures.
 int LcDev_TextureDraw(ILcTexture* texture, const RECT* rect,
 	const VEC2* position, const VEC2* scale, const VEC2* pivot,
-	float angle, DWORD color, int mono);
+	float angle, DWORD color, int mono, bool linear = false, int alphaMethod = -1);
 
 int	LcDev_TextureCreate(ILcTexture** pData
 					, void* p1=NULL

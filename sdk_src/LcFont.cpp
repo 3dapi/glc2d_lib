@@ -3,8 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <vector>
-#include <string>
+
 #include <utility>
 #include <windows.h>
 #include <d3d9.h>
@@ -12,6 +11,7 @@
 
 #include "glcInternal.h"
 #include "ILcFont.h"
+#include "LcxFont.h"
 #include "glc2d.h"
 
 namespace glc
@@ -38,7 +38,7 @@ public:
 
 	inline static int				m_nIDFnt    {};		// Font ID
 	inline static LPDIRECT3DDEVICE9	m_pDevice   {};		// D3DDevice
-	inline static LPD3DXSPRITE		m_pLcSprite {};		// DXSprite
+	inline static LPD3DXSPRITE		m_pd3dSprite{};		// DXSprite
 	inline static D3DXMATRIX		m_tm        {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1, };
 };
 
@@ -156,10 +156,20 @@ int LcDev_FontCreate(ILcFont** pData
 	return 0;
 }
 
-int LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pTm)
+int LcDev_FontInit(void* pd3dDevice, void* pd3dSprite, void* pLcSprite, void* pTm)
 {
 	CLcFont::m_pDevice	 = (LPDIRECT3DDEVICE9)pd3dDevice;
-	CLcFont::m_pLcSprite = (LPD3DXSPRITE)pd3dSprite;
+	CLcFont::m_pd3dSprite= (LPD3DXSPRITE)pd3dSprite;
+
+	D3DCAPS9 devCaps{};
+	const HRESULT hr = CLcFont::m_pDevice->GetDeviceCaps(&devCaps);
+	if(FAILED(hr))
+		return hr;
+
+	CLcxFont::m_pDevice	  = (LPDIRECT3DDEVICE9)pd3dDevice;
+	CLcxFont::m_pLcSprite = (glc::ILcSpriteX*)pLcSprite;
+	CLcxFont::m_devCaps   = devCaps;
+
 	D3DXMATRIX* tm       = (D3DXMATRIX*)pTm;
 	if(!pd3dDevice || !pd3dSprite || !tm)
 		return -1;
@@ -179,8 +189,6 @@ void LcDev_FontDestroy()
 	for(auto it = m_vFontFiles.rbegin(); it != m_vFontFiles.rend(); ++it)
 		RemoveFontResourceExW(it->path.c_str(), FR_PRIVATE, nullptr);
 	m_vFontFiles.clear();
-	CLcFont::m_pDevice = nullptr;
-	CLcFont::m_pLcSprite = nullptr;
 }
 
 ILcFont* LcDev_FontFind(int _nID)
@@ -231,7 +239,7 @@ static int InternalFontDrawText(const int nIdx
 	if(!s.length())
 		return -2;
 
-	auto sprite = glc::CLcFont::m_pLcSprite;
+	auto sprite = glc::CLcFont::m_pd3dSprite;
 	if(!sprite)
 		return -3;
 
@@ -256,11 +264,16 @@ static int InternalFontDrawText(const int nIdx
 		static_cast<double>(metrics.tmHeight) * 0.12));
 	drawRect.bottom += extraHeight;
 
-	HRESULT hr = glc::LcDev_SpritePrepare(glc::SPRITE_FILTER::Linear, glc::SPRITE_BLEND::Alpha);
+	HRESULT hr = sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	if(FAILED(hr))
+		return hr;
+	hr = sprite->SetTransform(&glc::CLcFont::m_tm);
+	int height = 0;
+	if(SUCCEEDED(hr))
+		height = pDxFnt->DrawTextA(sprite, s.c_str(), -1, &drawRect, flags, fontColor);
+	const HRESULT endHr = sprite->End();
 	if(FAILED(hr)) return hr;
-	hr = glc::LcDev_SpriteTransform(glc::CLcFont::m_tm);
-	if(FAILED(hr)) return hr;
-	const int height = pDxFnt->DrawTextA(sprite, s.c_str(), -1, &drawRect, flags, fontColor);
+	if(FAILED(endHr)) return endHr;
 	return height;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,13 +344,13 @@ int g2_FontDrawText(const int nIdx, const VEC2i& pos, const DWORD fontColor, con
 	return hr;
 }
 
-int g2_FontDrawText(int nIdx, std::initializer_list<LONG> coordinates,
+int g2_FontDrawText(int nIdx, std::initializer_list<int> coordinates,
 	DWORD fontColor, const char* format, ...)
 {
 	if(coordinates.size() != 2 && coordinates.size() != 4)
 		return -1;
 
-	const LONG* values = coordinates.begin();
+	const int* values = coordinates.begin();
 	RECT rect = {values[0], values[1], values[0], values[1]};
 	DWORD flags = DT_LEFT | DT_TOP | DT_NOCLIP;
 	if(coordinates.size() == 4)

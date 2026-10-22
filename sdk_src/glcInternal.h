@@ -24,17 +24,8 @@
 #include <vector>
 #include <vadefs.h>
 
-struct D3DXMATRIX;
-
 namespace glc
 {
-
-// Sampling and blending are independent of the drawing source (image/font).
-// The current sprite backend does not implement grayscale conversion.
-enum class SPRITE_FILTER { Point, Linear };
-enum class SPRITE_BLEND { Alpha, DestinationAlpha };
-int LcDev_SpritePrepare(SPRITE_FILTER filter, SPRITE_BLEND blend);
-int LcDev_SpriteTransform(const D3DXMATRIX& transform);
 
 std::wstring ToWideString(const std::string& str);
 int FormatLength(const char* format, va_list va);
